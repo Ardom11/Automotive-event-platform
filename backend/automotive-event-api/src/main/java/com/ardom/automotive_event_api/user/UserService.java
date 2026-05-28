@@ -19,7 +19,12 @@ public class UserService {
     }
 
     @Transactional
-    public void updateProfile(Long id, UpdateProfileRequest request){
+    public User updateProfile(Long id, UpdateProfileRequest request){
+        if((request.name() == null || request.name().isBlank()) &&
+                (request.surname() == null || request.surname().isBlank())){
+            return null;
+        }
+
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new UserNotFoundException("User not found"));
         boolean updated = false;
@@ -36,5 +41,7 @@ public class UserService {
         if(updated){
             user.setModifiedAt(LocalDateTime.now());
         }
+
+        return user;
     }
 }

@@ -44,6 +44,10 @@ class UserServiceTest {
                 .build();
     }
 
+    // -------------------------------------------------------------------------
+    // Method getCurrentUser()
+    // -------------------------------------------------------------------------
+
     @Test
     @DisplayName("Method getCurrentUser()")
     void getCurrentUser() {
@@ -58,6 +62,9 @@ class UserServiceTest {
         assertEquals(testUser.getEmail(), currentUser.getEmail());
     }
 
+    // -------------------------------------------------------------------------
+    // Method updateProfile()
+    // -------------------------------------------------------------------------
 
     @Nested
     @DisplayName("Method updateProfile()")
@@ -117,7 +124,19 @@ class UserServiceTest {
         void updateProfile_shouldThrowUserNotFoundException(){
             when(userRepository.findById(1L)).thenReturn(Optional.empty());
             assertThrows(UserNotFoundException.class,
-                    () -> userService.updateProfile(1L, new UpdateProfileRequest(null, null)));
+                    () -> userService.updateProfile(1L, new UpdateProfileRequest("update", "update")));
+        }
+
+        @Test
+        @DisplayName("Should return null when update request fields are null")
+        void updateProfile_shouldReturnNull_whenUpdateRequestFieldsNull(){
+            assertNull(userService.updateProfile(1L, new UpdateProfileRequest(null, null)));
+        }
+
+        @Test
+        @DisplayName("Should return null when update request fields are blank")
+        void updateProfile_shouldReturnNull_whenUpdateRequestFieldsBlank(){
+            assertNull(userService.updateProfile(1L, new UpdateProfileRequest("     ", "      ")));
         }
     }
 }
