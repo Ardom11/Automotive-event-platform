@@ -14,13 +14,13 @@ spring:
       hibernate:
         jdbc:
           time_zone: UTC
+  flyway:
+    enabled: true
+application:
   security:
     jwt:
       secret: ${SECRET_KEY}
       expiration: 3600000
-  flyway:
-    enabled: true
-
 ---
 spring:
   config:
@@ -32,7 +32,9 @@ spring:
       hibernate:
         format_sql: true
         use_sql_comments: true
-
+application:
+  swagger:
+    enabled: true
 ---
 spring:
   config:
@@ -44,4 +46,7 @@ springdoc:
   api-docs:
     enabled: false
   swagger-ui:
+    enabled: false
+application:
+  swagger:
     enabled: false
