@@ -1,4 +1,4 @@
-package com.ardom.automotive_event_api.auth;
+package com.ardom.automotive_event_api.security;
 
 import com.ardom.automotive_event_api.user.Role;
 import com.ardom.automotive_event_api.user.User;
