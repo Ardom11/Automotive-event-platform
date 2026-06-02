@@ -35,6 +35,9 @@ spring:
 application:
   swagger:
     enabled: true
+  security:
+    cookie:
+      secure: false
 ---
 spring:
   config:
@@ -50,3 +53,6 @@ springdoc:
 application:
   swagger:
     enabled: false
+  security:
+    cookie:
+      secure: true
