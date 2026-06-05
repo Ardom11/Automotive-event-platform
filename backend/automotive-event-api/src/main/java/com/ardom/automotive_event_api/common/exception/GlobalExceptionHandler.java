@@ -1,5 +1,9 @@
 package com.ardom.automotive_event_api.common.exception;
 
+import com.ardom.automotive_event_api.auth.exception.InvalidCredentialsException;
+import com.ardom.automotive_event_api.auth.exception.InvalidGoogleTokenException;
+import com.ardom.automotive_event_api.auth.exception.InvalidRefreshTokenException;
+import com.ardom.automotive_event_api.auth.exception.UserAlreadyExistsException;
 import com.ardom.automotive_event_api.user.exception.UserNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -29,8 +33,28 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(MissingRequestCookieException.class)
-    public ResponseEntity<ErrorResponse> handleMissingCookie(MissingRequestCookieException e) {
+    public ResponseEntity<ErrorResponse> handleMissingCookieException(MissingRequestCookieException e) {
         return buildResponse(HttpStatus.BAD_REQUEST, "Required cookie is missing: " + e.getCookieName());
+    }
+
+    @ExceptionHandler(InvalidCredentialsException.class)
+    public ResponseEntity<ErrorResponse> handeInvalidCredentialsException(InvalidCredentialsException e){
+        return buildResponse(HttpStatus.BAD_REQUEST, e.getMessage());
+    }
+
+    @ExceptionHandler(InvalidRefreshTokenException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidRefreshTokenException(InvalidRefreshTokenException e){
+        return buildResponse(HttpStatus.BAD_REQUEST, e.getMessage());
+    }
+
+    @ExceptionHandler(UserAlreadyExistsException.class)
+    public ResponseEntity<ErrorResponse> handleUserAlreadyExistsException(UserAlreadyExistsException e){
+        return buildResponse(HttpStatus.CONFLICT, e.getMessage());
+    }
+
+    @ExceptionHandler(InvalidGoogleTokenException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidGoogleTokenException(InvalidGoogleTokenException e){
+        return buildResponse(HttpStatus.UNAUTHORIZED, e.getMessage());
     }
 
     @ExceptionHandler(Exception.class)

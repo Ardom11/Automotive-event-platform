@@ -1,5 +1,6 @@
 package com.ardom.automotive_event_api.auth;
 
+import com.ardom.automotive_event_api.auth.dto.request.GoogleLoginRequest;
 import com.ardom.automotive_event_api.auth.dto.request.LoginRequest;
 import com.ardom.automotive_event_api.auth.dto.request.RegisterRequest;
 import com.ardom.automotive_event_api.auth.dto.response.AuthResponse;
@@ -39,6 +40,16 @@ public class AuthController {
                                                HttpServletResponse response) {
 
         AuthResponse authResponse = authService.login(loginRequest);
+
+        setRefreshTokenCookie(authResponse.refreshToken(), response);
+
+        return ResponseEntity.ok(new TokenResponse(authResponse.accessToken()));
+    }
+
+    @PostMapping("/google")
+    public ResponseEntity<TokenResponse> googleLogin(@Valid @RequestBody GoogleLoginRequest request,
+                                                     HttpServletResponse response){
+        AuthResponse authResponse = authService.googleLogin(request.googleToken());
 
         setRefreshTokenCookie(authResponse.refreshToken(), response);
 

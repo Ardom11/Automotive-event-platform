@@ -35,7 +35,6 @@ public class User implements UserDetails {
     @Column(nullable = false, unique = true)
     private String email;
 
-    @Column(nullable = false)
     private String password;
 
     @JdbcTypeCode(SqlTypes.NAMED_ENUM)
@@ -66,6 +65,6 @@ public class User implements UserDetails {
 
     @Override
     public String getPassword() {
-        return password;
+        return password != null ? password : "";
     }
 }

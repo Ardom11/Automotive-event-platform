@@ -10,6 +10,7 @@ import com.ardom.automotive_event_api.security.JwtService;
 import com.ardom.automotive_event_api.user.Role;
 import com.ardom.automotive_event_api.user.User;
 import com.ardom.automotive_event_api.user.UserRepository;
+import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -24,6 +25,8 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import java.util.Optional;
+
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
@@ -37,6 +40,8 @@ class AuthServiceTest {
     private PasswordEncoder passwordEncoder;
     @Mock
     private AuthenticationManager authenticationManager;
+    @Mock
+    private GoogleTokenVerifierService googleTokenVerifierService;
 
     private final AuthMapper authMapper = new AuthMapper();
     @Mock
@@ -44,12 +49,11 @@ class AuthServiceTest {
     @Mock
     private RefreshTokenService refreshTokenService;
 
-    //@InjectMocks
     private AuthService authService;
 
     @BeforeEach
     void setUp() {
-        authService = new AuthService(userRepository, authMapper, passwordEncoder, jwtService, authenticationManager, refreshTokenService);
+        authService = new AuthService(userRepository, authMapper, passwordEncoder, jwtService, authenticationManager, refreshTokenService, googleTokenVerifierService);
     }
 
     @Nested
@@ -175,6 +179,142 @@ class AuthServiceTest {
             verify(refreshTokenService).revokeAllUserTokens(user);
             verify(jwtService).generateToken(user);
             verify(refreshTokenService).createRefreshToken(user);
+        }
+    }
+
+    @Nested
+    class GoogleLogin {
+
+        private GoogleIdToken.Payload mockPayload(String email, String googleId,
+                                                  String name, String surname) {
+            GoogleIdToken.Payload payload = mock(GoogleIdToken.Payload.class);
+            when(payload.getEmail()).thenReturn(email);
+            when(payload.getSubject()).thenReturn(googleId);
+            when(payload.get("given_name")).thenReturn(name);
+            when(payload.get("family_name")).thenReturn(surname);
+            return payload;
+        }
+
+        @Test
+        @DisplayName("Should create new user and return tokens when Google user does not exist")
+        void googleLogin_shouldCreateNewUserAndReturnTokens_whenGoogleUserDoesNotExist() {
+            // given
+            var payload = mockPayload("new@gmail.com", "g-123", "John", "Doe");
+            when(googleTokenVerifierService.verify("valid-token")).thenReturn(payload);
+            when(userRepository.findByEmail("new@gmail.com")).thenReturn(Optional.empty());
+
+            User savedUser = User.builder()
+                    .email("new@gmail.com")
+                    .name("John")
+                    .surname("Doe")
+                    .googleId("g-123")
+                    .role(Role.USER)
+                    .build();
+            when(userRepository.save(any(User.class))).thenReturn(savedUser);
+            when(jwtService.generateToken(savedUser)).thenReturn("access-jwt");
+            when(refreshTokenService.createRefreshToken(savedUser)).thenReturn("refresh-jwt");
+
+            // when
+            AuthResponse result = authService.googleLogin("valid-token");
+
+            // then
+            assertEquals("access-jwt", result.accessToken());
+            assertEquals("refresh-jwt", result.refreshToken());
+
+            ArgumentCaptor<User> captor = ArgumentCaptor.forClass(User.class);
+            verify(userRepository).save(captor.capture());
+            User captured = captor.getValue();
+            assertEquals("new@gmail.com", captured.getEmail());
+            assertEquals("John", captured.getName());
+            assertEquals("Doe", captured.getSurname());
+            assertEquals("g-123", captured.getGoogleId());
+            assertEquals(Role.USER, captured.getRole());
+            assertEquals("", captured.getPassword());
+        }
+
+        @Test
+        @DisplayName("Should return tokens without saving when Google user already exists")
+        void googleLogin_shouldReturnTokensWithoutSaving_whenGoogleUserAlreadyExists() {
+            // given
+            var payload = mockPayload("existing@gmail.com", "g-123", "John", "Doe");
+            when(googleTokenVerifierService.verify("valid-token")).thenReturn(payload);
+
+            User existingUser = User.builder()
+                    .email("existing@gmail.com")
+                    .googleId("g-123")
+                    .role(Role.USER)
+                    .build();
+            when(userRepository.findByEmail("existing@gmail.com"))
+                    .thenReturn(Optional.of(existingUser));
+            when(jwtService.generateToken(existingUser)).thenReturn("access-jwt");
+            when(refreshTokenService.createRefreshToken(existingUser)).thenReturn("refresh-jwt");
+
+            // when
+            AuthResponse result = authService.googleLogin("valid-token");
+
+            // then
+            assertEquals("access-jwt", result.accessToken());
+            assertEquals("refresh-jwt", result.refreshToken());
+            verify(userRepository, never()).save(any());
+        }
+
+        @Test
+        @DisplayName("Should throw UserAlreadyExistsException when email is already registered locally")
+        void googleLogin_shouldThrowUserAlreadyExistsException_whenEmailAlreadyRegisteredLocally() {
+            // given
+            var payload = mockPayload("local@gmail.com", "g-123", "John", "Doe");
+            when(googleTokenVerifierService.verify("valid-token")).thenReturn(payload);
+
+            User localUser = User.builder()
+                    .email("local@gmail.com")
+                    .googleId(null)
+                    .build();
+            when(userRepository.findByEmail("local@gmail.com"))
+                    .thenReturn(Optional.of(localUser));
+
+            // when & then
+            assertThrows(UserAlreadyExistsException.class,
+                    () -> authService.googleLogin("valid-token"));
+
+            verify(userRepository, never()).save(any());
+            verifyNoInteractions(jwtService);
+            verifyNoInteractions(refreshTokenService);
+        }
+
+        @Test
+        @DisplayName("Should default surname to empty string when family name is null")
+        void googleLogin_shouldDefaultSurnameToEmptyString_whenFamilyNameIsNull() {
+            // given
+            var payload = mockPayload("nosurname@gmail.com", "g-456", "Madonna", null);
+            when(googleTokenVerifierService.verify("valid-token")).thenReturn(payload);
+            when(userRepository.findByEmail("nosurname@gmail.com")).thenReturn(Optional.empty());
+            when(userRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+            when(jwtService.generateToken(any())).thenReturn("access-jwt");
+            when(refreshTokenService.createRefreshToken(any())).thenReturn("refresh-jwt");
+
+            // when
+            authService.googleLogin("valid-token");
+
+            // then
+            ArgumentCaptor<User> captor = ArgumentCaptor.forClass(User.class);
+            verify(userRepository).save(captor.capture());
+            assertEquals("", captor.getValue().getSurname());
+        }
+
+        @Test
+        @DisplayName("Should not interact with repository when Google token is invalid")
+        void googleLogin_shouldNotInteractWithRepository_whenGoogleTokenIsInvalid() {
+            // given
+            when(googleTokenVerifierService.verify("bad-token"))
+                    .thenThrow(new RuntimeException("Invalid Google token"));
+
+            // when & then
+            assertThrows(RuntimeException.class,
+                    () -> authService.googleLogin("bad-token"));
+
+            verifyNoInteractions(userRepository);
+            verifyNoInteractions(jwtService);
+            verifyNoInteractions(refreshTokenService);
         }
     }
 }

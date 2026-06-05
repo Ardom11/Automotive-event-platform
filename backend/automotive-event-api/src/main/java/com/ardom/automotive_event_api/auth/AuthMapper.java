@@ -10,6 +10,8 @@ public class AuthMapper {
     public User toEntity(RegisterRequest registerRequest) {
         return User.builder()
                 .email(registerRequest.email())
+                .name(registerRequest.name())
+                .surname(registerRequest.surname())
                 .password(registerRequest.password())
                 .role(Role.USER)
                 .build();
