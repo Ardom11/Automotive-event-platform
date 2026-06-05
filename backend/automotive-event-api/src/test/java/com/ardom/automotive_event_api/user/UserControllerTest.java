@@ -1,5 +1,6 @@
 package com.ardom.automotive_event_api.user;
 
+import com.ardom.automotive_event_api.security.JwtService;
 import com.ardom.automotive_event_api.security.config.TestSecurityConfig;
 import com.ardom.automotive_event_api.user.dto.request.UpdateProfileRequest;
 import com.ardom.automotive_event_api.user.dto.response.UserResponse;
@@ -11,6 +12,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -34,6 +36,12 @@ class UserControllerTest {
     private MockMvc mockMvc;
 
     private ObjectMapper objectMapper;
+
+    @MockitoBean
+    private JwtService jwtService;
+
+    @MockitoBean
+    private UserDetailsService userDetailsService;
 
     @MockitoBean
     private UserService userService;
@@ -94,7 +102,6 @@ class UserControllerTest {
         }
 
         @Test
-        @Disabled("Security not configured yet — re-enable when SecurityFilterChain is in place")
         @DisplayName("Should return 401 when request is unauthenticated")
         void getCurrentUser_shouldReturn401_whenUnauthenticated() throws Exception {
             // When / Then
@@ -223,7 +230,6 @@ class UserControllerTest {
         }
 
         @Test
-        @Disabled("Security not configured yet — re-enable when SecurityFilterChain is in place")
         @DisplayName("Should return 401 when request is unauthenticated")
         void updateProfile_shouldReturn401_whenUnauthenticated() throws Exception {
             // Given
