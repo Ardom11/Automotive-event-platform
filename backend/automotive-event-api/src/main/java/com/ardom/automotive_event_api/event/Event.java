@@ -10,6 +10,7 @@ import org.hibernate.annotations.UpdateTimestamp;
 import org.hibernate.type.SqlTypes;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Entity
@@ -25,12 +26,10 @@ public class Event {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @NotBlank(message = "Name of event must be not blank")
     @Size(max = 100)
     @Column(nullable = false, length = 100)
     private String name;
 
-    @NotBlank
     @Size(max = 5000)
     @Column(nullable = false, length = 5000)
     private String description;
@@ -64,6 +63,16 @@ public class Event {
     @UpdateTimestamp
     @Column(name = "modified_at", nullable = false)
     private LocalDateTime modifiedAt;
+
+    @Transient
+    public LocalDate getApplicationDeadline() {
+        return dateStart.toLocalDate().minusWeeks(2);
+    }
+
+    @Transient
+    public LocalDate getPaymentDeadline() {
+        return dateStart.toLocalDate().minusDays(7);
+    }
 }
 
 

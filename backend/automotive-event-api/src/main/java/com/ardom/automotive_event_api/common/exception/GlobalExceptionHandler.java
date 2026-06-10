@@ -4,6 +4,9 @@ import com.ardom.automotive_event_api.auth.exception.InvalidCredentialsException
 import com.ardom.automotive_event_api.auth.exception.InvalidGoogleTokenException;
 import com.ardom.automotive_event_api.auth.exception.InvalidRefreshTokenException;
 import com.ardom.automotive_event_api.auth.exception.UserAlreadyExistsException;
+import com.ardom.automotive_event_api.event.exception.DeletingNotDraftEventException;
+import com.ardom.automotive_event_api.event.exception.EventNotFoundException;
+import com.ardom.automotive_event_api.event.exception.InvalidStatusTransitionException;
 import com.ardom.automotive_event_api.user.exception.UserNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -28,7 +31,7 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ErrorResponse> handleMethodArgumentNotValidException(MethodArgumentNotValidException e){
+    public ResponseEntity<ErrorResponse> handleMethodArgumentNotValidException(MethodArgumentNotValidException e) {
         return buildResponse(HttpStatus.BAD_REQUEST, e.getMessage());
     }
 
@@ -38,27 +41,42 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(InvalidCredentialsException.class)
-    public ResponseEntity<ErrorResponse> handeInvalidCredentialsException(InvalidCredentialsException e){
+    public ResponseEntity<ErrorResponse> handeInvalidCredentialsException(InvalidCredentialsException e) {
         return buildResponse(HttpStatus.BAD_REQUEST, e.getMessage());
     }
 
     @ExceptionHandler(InvalidRefreshTokenException.class)
-    public ResponseEntity<ErrorResponse> handleInvalidRefreshTokenException(InvalidRefreshTokenException e){
+    public ResponseEntity<ErrorResponse> handleInvalidRefreshTokenException(InvalidRefreshTokenException e) {
         return buildResponse(HttpStatus.BAD_REQUEST, e.getMessage());
     }
 
     @ExceptionHandler(UserAlreadyExistsException.class)
-    public ResponseEntity<ErrorResponse> handleUserAlreadyExistsException(UserAlreadyExistsException e){
+    public ResponseEntity<ErrorResponse> handleUserAlreadyExistsException(UserAlreadyExistsException e) {
         return buildResponse(HttpStatus.CONFLICT, e.getMessage());
     }
 
     @ExceptionHandler(InvalidGoogleTokenException.class)
-    public ResponseEntity<ErrorResponse> handleInvalidGoogleTokenException(InvalidGoogleTokenException e){
+    public ResponseEntity<ErrorResponse> handleInvalidGoogleTokenException(InvalidGoogleTokenException e) {
         return buildResponse(HttpStatus.UNAUTHORIZED, e.getMessage());
     }
 
+    @ExceptionHandler(DeletingNotDraftEventException.class)
+    public ResponseEntity<ErrorResponse> handleDeletingNotDraftEventException(DeletingNotDraftEventException e) {
+        return buildResponse(HttpStatus.CONFLICT, e.getMessage());
+    }
+
+    @ExceptionHandler(EventNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleEventNotFoundException(EventNotFoundException e) {
+        return buildResponse(HttpStatus.NOT_FOUND, e.getMessage());
+    }
+
+    @ExceptionHandler(InvalidStatusTransitionException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidStatusTransitionException(InvalidStatusTransitionException e) {
+        return buildResponse(HttpStatus.CONFLICT, e.getMessage());
+    }
+
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<ErrorResponse> handleException(Exception e){
+    public ResponseEntity<ErrorResponse> handleException(Exception e) {
         log.error("Unexpected error occurred: ", e);
         return buildResponse(HttpStatus.INTERNAL_SERVER_ERROR, "An internal server error occurred");
     }
