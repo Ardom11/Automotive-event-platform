@@ -147,7 +147,8 @@ public class EventService {
     }
 
     public EventSummaryResponse getEventSummary(Long id) {
-        Event event = getEventById(id);
+        Event event = eventRepository.findByIdAndStatus(id, EventStatus.PUBLISHED)
+                .orElseThrow(() -> new EventNotFoundException("Event is not found"));
 
         return eventMapper.toPublicResponse(event);
     }

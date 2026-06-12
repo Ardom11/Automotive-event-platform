@@ -59,6 +59,7 @@ public class SecurityConfig {
 
     public static final String[] PUBLIC_ENDPOINTS = {
             "/auth/**",
+            "/events/**",
             "/error"
     };
 
