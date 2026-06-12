@@ -4,6 +4,7 @@ import com.ardom.automotive_event_api.auth.exception.InvalidCredentialsException
 import com.ardom.automotive_event_api.auth.exception.InvalidGoogleTokenException;
 import com.ardom.automotive_event_api.auth.exception.InvalidRefreshTokenException;
 import com.ardom.automotive_event_api.auth.exception.UserAlreadyExistsException;
+import com.ardom.automotive_event_api.common.dto.response.ErrorResponse;
 import com.ardom.automotive_event_api.event.exception.DeletingNotDraftEventException;
 import com.ardom.automotive_event_api.event.exception.EventNotFoundException;
 import com.ardom.automotive_event_api.event.exception.InvalidStatusTransitionException;
@@ -11,18 +12,22 @@ import com.ardom.automotive_event_api.user.exception.UserNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingRequestCookieException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-import com.ardom.automotive_event_api.common.dto.response.ErrorResponse;
 
 import java.time.LocalDateTime;
 
 @RestControllerAdvice
 @Slf4j
 public class GlobalExceptionHandler {
+
+    @ExceptionHandler(AuthorizationDeniedException.class)
+    public ResponseEntity<ErrorResponse> handleAuthorizationDeniedException(AuthorizationDeniedException e) {
+        return buildResponse(HttpStatus.FORBIDDEN, e.getMessage());
+    }
 
     @ExceptionHandler(UserNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleUserNotFoundException(UserNotFoundException e) {

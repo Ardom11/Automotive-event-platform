@@ -1,10 +1,10 @@
 package com.ardom.automotive_event_api.event.dto.request;
 
 import com.ardom.automotive_event_api.event.EventStatus;
-import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 
 public record UpdateEventStatusRequest(
-        @NotBlank
+        @NotNull
         EventStatus status
 ) {
 }

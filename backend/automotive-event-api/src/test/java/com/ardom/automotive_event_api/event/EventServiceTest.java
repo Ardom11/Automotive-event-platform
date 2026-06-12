@@ -3,6 +3,7 @@ package com.ardom.automotive_event_api.event;
 import com.ardom.automotive_event_api.event.dto.LocationDto;
 import com.ardom.automotive_event_api.event.dto.request.CreateEventRequest;
 import com.ardom.automotive_event_api.event.dto.request.UpdateEventRequest;
+import com.ardom.automotive_event_api.event.dto.response.AdminEventSummaryResponse;
 import com.ardom.automotive_event_api.event.dto.response.EventResponse;
 import com.ardom.automotive_event_api.event.dto.response.EventSummaryResponse;
 import com.ardom.automotive_event_api.event.exception.DeletingNotDraftEventException;
@@ -389,7 +390,7 @@ class EventServiceTest {
             when(eventRepository.findAll(pageable)).thenReturn(eventPage);
 
             // when
-            Page<EventResponse> result = eventService.getAllEvents(pageable);
+            Page<AdminEventSummaryResponse> result = eventService.getAllEvents(pageable);
 
             // then
             assertThat(result).hasSize(2);
@@ -404,7 +405,7 @@ class EventServiceTest {
             when(eventRepository.findAll(pageable)).thenReturn(Page.empty());
 
             // when
-            Page<EventResponse> result = eventService.getAllEvents(pageable);
+            Page<AdminEventSummaryResponse> result = eventService.getAllEvents(pageable);
 
             // then
             assertThat(result).isEmpty();

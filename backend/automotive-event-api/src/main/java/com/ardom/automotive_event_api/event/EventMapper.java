@@ -2,6 +2,7 @@ package com.ardom.automotive_event_api.event;
 
 import com.ardom.automotive_event_api.event.dto.LocationDto;
 import com.ardom.automotive_event_api.event.dto.request.CreateEventRequest;
+import com.ardom.automotive_event_api.event.dto.response.AdminEventSummaryResponse;
 import com.ardom.automotive_event_api.event.dto.response.EventResponse;
 import com.ardom.automotive_event_api.event.dto.response.EventSummaryResponse;
 import org.springframework.stereotype.Component;
@@ -45,6 +46,17 @@ public class EventMapper {
                 event.getStatus(),
                 event.getCreatedAt(),
                 event.getModifiedAt()
+        );
+    }
+
+    public AdminEventSummaryResponse toAdminSummaryResponse(Event event) {
+        return new AdminEventSummaryResponse(
+                event.getId(),
+                event.getName(),
+                event.getLocation().getCity(),
+                event.getDateStart(),
+                event.getDateEnd(),
+                event.getStatus()
         );
     }
 

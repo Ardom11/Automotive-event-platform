@@ -1,9 +1,6 @@
 package com.ardom.automotive_event_api.event.dto.request;
 
-import jakarta.validation.constraints.Future;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Positive;
-import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -37,23 +34,23 @@ public record CreateEventRequest(
         BigDecimal latitude,
         BigDecimal longitude,
 
-        @NotBlank(message = "Starting date of event must not be blank")
+        @NotNull(message = "Starting date of event must not be empty")
         @Future
         LocalDateTime dateStart,
 
-        @NotBlank(message = "Ending date of event must not be blank")
+        @NotNull(message = "Ending date of event must not be empty")
         @Future
         LocalDateTime dateEnd,
 
-        @NotBlank(message = "Tickets capacity of event must not be blank")
+        @NotNull(message = "Tickets capacity of event must not be empty")
         @Positive
         Integer ticketsCapacity,
 
-        @NotBlank(message = "Ticket price of event must not be blank")
+        @NotNull(message = "Ticket price of event must not be empty")
         @Positive
         BigDecimal ticketPrice,
 
-        @NotBlank(message = "Application fee of event must not be blank")
+        @NotNull(message = "Application fee of event must not be empty")
         @Positive
         BigDecimal applicationFee
 ) {
