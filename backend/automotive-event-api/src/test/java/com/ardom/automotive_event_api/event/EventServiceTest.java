@@ -483,7 +483,7 @@ class EventServiceTest {
         void getEventSummary_shouldReturnEventSummary_whenEventExists() {
             // given
             EventSummaryResponse expectedResponse = eventMapper.toPublicResponse(publishedEvent);
-            when(eventRepository.findById(2L)).thenReturn(Optional.of(publishedEvent));
+            when(eventRepository.findByIdAndStatus(2L, EventStatus.PUBLISHED)).thenReturn(Optional.of(publishedEvent));
 
             // when
             EventSummaryResponse result = eventService.getEventSummary(2L);
@@ -496,7 +496,7 @@ class EventServiceTest {
         @DisplayName("should throw EventNotFoundException when event does not exist")
         void getEventSummary_shouldThrowEventNotFoundException_whenEventDoesNotExist() {
             // given
-            when(eventRepository.findById(99L)).thenReturn(Optional.empty());
+            when(eventRepository.findByIdAndStatus(99L, EventStatus.PUBLISHED)).thenReturn(Optional.empty());
 
             // when / then
             assertThatThrownBy(() -> eventService.getEventSummary(99L))

@@ -6,6 +6,7 @@ import com.ardom.automotive_event_api.event.dto.response.AdminEventSummaryRespon
 import com.ardom.automotive_event_api.event.dto.response.EventResponse;
 import com.ardom.automotive_event_api.event.dto.response.EventSummaryResponse;
 import com.ardom.automotive_event_api.event.exception.DeletingNotDraftEventException;
+import com.ardom.automotive_event_api.event.exception.EventNotEditableException;
 import com.ardom.automotive_event_api.event.exception.EventNotFoundException;
 import com.ardom.automotive_event_api.event.exception.InvalidStatusTransitionException;
 import jakarta.transaction.Transactional;
@@ -66,6 +67,10 @@ public class EventService {
     @Transactional
     public EventResponse updateEvent(Long id, UpdateEventRequest request) {
         Event event = getEventById(id);
+
+        if (event.getStatus() != EventStatus.DRAFT && event.getStatus() != EventStatus.UNPUBLISHED) {
+            throw new EventNotEditableException("Cannot modify event with id " + event.getId() + " because status is " + event.getStatus());
+        }
 
         if (request.name() != null) {
             event.setName(request.name());

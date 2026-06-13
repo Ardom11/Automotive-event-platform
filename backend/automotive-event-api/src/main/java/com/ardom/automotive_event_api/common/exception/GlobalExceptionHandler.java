@@ -6,6 +6,7 @@ import com.ardom.automotive_event_api.auth.exception.InvalidRefreshTokenExceptio
 import com.ardom.automotive_event_api.auth.exception.UserAlreadyExistsException;
 import com.ardom.automotive_event_api.common.dto.response.ErrorResponse;
 import com.ardom.automotive_event_api.event.exception.DeletingNotDraftEventException;
+import com.ardom.automotive_event_api.event.exception.EventNotEditableException;
 import com.ardom.automotive_event_api.event.exception.EventNotFoundException;
 import com.ardom.automotive_event_api.event.exception.InvalidStatusTransitionException;
 import com.ardom.automotive_event_api.user.exception.UserNotFoundException;
@@ -78,6 +79,11 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(InvalidStatusTransitionException.class)
     public ResponseEntity<ErrorResponse> handleInvalidStatusTransitionException(InvalidStatusTransitionException e) {
         return buildResponse(HttpStatus.CONFLICT, e.getMessage());
+    }
+
+    @ExceptionHandler(EventNotEditableException.class)
+    public ResponseEntity<ErrorResponse> handleEventNotEditableException(EventNotEditableException e) {
+        return buildResponse(HttpStatus.BAD_REQUEST, e.getMessage());
     }
 
     @ExceptionHandler(Exception.class)
