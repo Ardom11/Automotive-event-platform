@@ -4,6 +4,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.util.Collection;
 import java.util.Optional;
 
 public interface EventRepository extends JpaRepository<Event, Long> {
@@ -12,4 +13,8 @@ public interface EventRepository extends JpaRepository<Event, Long> {
     Optional<Event> findByIdAndStatus(Long id, EventStatus status);
 
     Page<Event> findByStatus(EventStatus status, Pageable pageable);
+
+    boolean existsByName(String name);
+
+    void deleteAllByNameIn(Collection<String> names);
 }
