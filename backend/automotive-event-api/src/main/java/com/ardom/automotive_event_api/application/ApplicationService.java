@@ -3,12 +3,13 @@ package com.ardom.automotive_event_api.application;
 import com.ardom.automotive_event_api.application.car.*;
 import com.ardom.automotive_event_api.application.dto.CarDto;
 import com.ardom.automotive_event_api.application.dto.request.CreateApplicationRequest;
+import com.ardom.automotive_event_api.application.dto.request.RejectApplicationRequest;
 import com.ardom.automotive_event_api.application.dto.request.UpdateApplicationRequest;
 import com.ardom.automotive_event_api.application.dto.response.*;
-import com.ardom.automotive_event_api.application.exception.ApplicationNotEditableException;
-import com.ardom.automotive_event_api.application.exception.ApplicationNotFoundException;
-import com.ardom.automotive_event_api.application.exception.TooManyCarsException;
+import com.ardom.automotive_event_api.application.exception.*;
+import com.ardom.automotive_event_api.event.Event;
 import com.ardom.automotive_event_api.event.EventRepository;
+import com.ardom.automotive_event_api.event.EventStatus;
 import com.ardom.automotive_event_api.event.exception.EventNotFoundException;
 import com.ardom.automotive_event_api.user.User;
 import com.ardom.automotive_event_api.user.exception.UserNotFoundException;
@@ -36,15 +37,29 @@ public class ApplicationService {
     private final ApplicationMapper applicationMapper;
     private final CarMapper carMapper;
 
+    // -------------------------------------------------------------------------
+    // Public
+    // -------------------------------------------------------------------------
+
     @Transactional
     public ApplicationResponse createApplication(Authentication authentication,
                                                  CreateApplicationRequest request) {
 
-        Application application = applicationMapper.toBlankApplication(
-                (User) authentication.getPrincipal(),
-                eventRepository.findById(request.eventId()).orElseThrow(
-                        () -> new EventNotFoundException("Event is not found"))
-        );
+        Event event = eventRepository.findById(request.eventId())
+                .orElseThrow(() -> new EventNotFoundException("Event with id " + request.eventId() + " is not found"));
+
+        if (event.getStatus() != EventStatus.PUBLISHED) {
+            throw new EventNotFoundException("Event with id " + request.eventId() + " is not found");
+        }
+
+        User user = (User) authentication.getPrincipal();
+
+        if (applicationRepository.existsByUserIdAndEventId(user.getId(), event.getId())) {
+            throw new UserAlreadyHasApplicationException(
+                    "An application for event " + event.getId() + " already exists");
+        }
+
+        Application application = applicationMapper.toBlankApplication(user, event);
 
         application = applicationRepository.save(application);
 
@@ -97,7 +112,7 @@ public class ApplicationService {
 
         applicationRepository.save(application);
 
-        return getApplication(id);
+        return getApplication(authentication, id);
     }
 
     @Transactional
@@ -118,14 +133,18 @@ public class ApplicationService {
 
         int carCount = carRepository.countByApplicationId(id);
         if (carCount == 0) {
-            throw new ApplicationNotEditableException("Cannot submit an application with no cars");
+            throw new ApplicationNotSubmittableException("Cannot submit an application with no cars");
+        }
+
+        if (!application.isSubmittable()) {
+            throw new ApplicationNotSubmittableException("The application can no longer be submitted.");
         }
 
         application.setStatus(ApplicationStatus.PENDING);
         application.setRejectionReason(null);
         applicationRepository.save(application);
 
-        return getApplication(id);
+        return getApplication(authentication, id);
     }
 
     public Page<ApplicationSummaryResponse> getUserApplications(Authentication authentication, Pageable pageable) {
@@ -137,8 +156,13 @@ public class ApplicationService {
         return getApplications(pageable, user);
     }
 
-    public ApplicationResponse getApplication(Long id) {
+    public ApplicationResponse getApplication(Authentication authentication, Long id) {
         Application application = getApplicationById(id);
+
+        User user = (User) authentication.getPrincipal();
+        if (!application.getUser().getId().equals(user.getId())) {
+            throw new ApplicationNotFoundException("Application with id " + id + " is not found");
+        }
 
         List<Car> cars = carRepository.findAllByApplicationId(id);
         List<Long> carIds = cars.stream()
@@ -160,7 +184,7 @@ public class ApplicationService {
     }
 
     @Transactional
-    public void deleteApplication(Long id, Authentication authentication) {
+    public void deleteApplication(Authentication authentication, Long id) {
         Application application = applicationRepository.findById(id)
                 .orElseThrow(() -> new ApplicationNotFoundException("Application with id " + id + " is not found"));
 
@@ -171,6 +195,10 @@ public class ApplicationService {
 
         applicationRepository.deleteById(id);
     }
+
+    // -------------------------------------------------------------------------
+    // Admin
+    // -------------------------------------------------------------------------
 
     public Page<ApplicationSummaryResponse> getAllApplications(Pageable pageable) {
         return getApplications(pageable, null);
@@ -207,6 +235,37 @@ public class ApplicationService {
 
         return getApplicationForAdmin(id);
     }
+
+    @Transactional
+    public AdminApplicationResponse approveApplication(Long id) {
+        Application application = getApplicationById(id);
+
+        if (application.getStatus() != ApplicationStatus.PENDING) {
+            throw new InvalidApplicationStatusTransitionException("Application can't be approved");
+        }
+
+        application.setStatus(ApplicationStatus.APPROVED_WAITING_PAYMENT);
+
+        return getApplicationForAdmin(id);
+    }
+
+    @Transactional
+    public AdminApplicationResponse rejectApplication(Long id, RejectApplicationRequest request) {
+        Application application = getApplicationById(id);
+
+        if (application.getStatus() != ApplicationStatus.PENDING) {
+            throw new InvalidApplicationStatusTransitionException("Application can't be rejected");
+        }
+
+        application.setStatus(ApplicationStatus.REJECTED);
+        if (!request.rejectionReason().isBlank()) {
+            application.setRejectionReason(request.rejectionReason());
+        }
+
+        return getApplicationForAdmin(id);
+    }
+
+    // -------------------------------------------------------------------------
 
     private Page<ApplicationSummaryResponse> getApplications(Pageable pageable, User user) {
         Page<Application> applications;

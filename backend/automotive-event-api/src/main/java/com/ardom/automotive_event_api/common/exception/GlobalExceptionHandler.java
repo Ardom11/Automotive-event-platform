@@ -1,5 +1,6 @@
 package com.ardom.automotive_event_api.common.exception;
 
+import com.ardom.automotive_event_api.application.exception.*;
 import com.ardom.automotive_event_api.auth.exception.InvalidCredentialsException;
 import com.ardom.automotive_event_api.auth.exception.InvalidGoogleTokenException;
 import com.ardom.automotive_event_api.auth.exception.InvalidRefreshTokenException;
@@ -84,6 +85,36 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(EventNotEditableException.class)
     public ResponseEntity<ErrorResponse> handleEventNotEditableException(EventNotEditableException e) {
         return buildResponse(HttpStatus.BAD_REQUEST, e.getMessage());
+    }
+
+    @ExceptionHandler(ApplicationNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleApplicationNotFoundException(ApplicationNotFoundException e) {
+        return buildResponse(HttpStatus.NOT_FOUND, e.getMessage());
+    }
+
+    @ExceptionHandler(ApplicationNotEditableException.class)
+    public ResponseEntity<ErrorResponse> handleApplicationNotEditableException(ApplicationNotEditableException e) {
+        return buildResponse(HttpStatus.BAD_REQUEST, e.getMessage());
+    }
+
+    @ExceptionHandler(ApplicationNotSubmittableException.class)
+    public ResponseEntity<ErrorResponse> handleApplicationNotSubmittableException(ApplicationNotSubmittableException e) {
+        return buildResponse(HttpStatus.BAD_REQUEST, e.getMessage());
+    }
+
+    @ExceptionHandler(TooManyCarsException.class)
+    public ResponseEntity<ErrorResponse> handleTooManyCarsException(TooManyCarsException e) {
+        return buildResponse(HttpStatus.BAD_REQUEST, e.getMessage());
+    }
+
+    @ExceptionHandler(InvalidApplicationStatusTransitionException.class)
+    public ResponseEntity<ErrorResponse> handleApplicationNotApprovableException(InvalidApplicationStatusTransitionException e) {
+        return buildResponse(HttpStatus.BAD_REQUEST, e.getMessage());
+    }
+
+    @ExceptionHandler(UserAlreadyHasApplicationException.class)
+    public ResponseEntity<ErrorResponse> handleUserAlreadyHasApplicationException(UserAlreadyHasApplicationException e){
+        return buildResponse(HttpStatus.CONFLICT, e.getMessage());
     }
 
     @ExceptionHandler(Exception.class)

@@ -10,6 +10,7 @@ import org.hibernate.annotations.UpdateTimestamp;
 import org.hibernate.type.SqlTypes;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Entity
@@ -54,4 +55,9 @@ public class Application {
     @UpdateTimestamp
     @Column(name = "modified_at", nullable = false)
     private LocalDateTime modifiedAt;
+
+    public boolean isSubmittable() {
+        return this.status == ApplicationStatus.DRAFT
+                && LocalDate.now().isBefore(event.getApplicationDeadline());
+    }
 }
