@@ -13,7 +13,7 @@ public record CarDto(
         Short year,
         @Size(max = 1500)
         String story,
-        @Size(max = 20)
+        @Size(min = 1, max = 20)
         List<String> photoKeys
 ) {
 }

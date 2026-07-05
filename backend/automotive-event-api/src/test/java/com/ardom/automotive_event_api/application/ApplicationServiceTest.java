@@ -12,6 +12,8 @@ import com.ardom.automotive_event_api.event.Event;
 import com.ardom.automotive_event_api.event.EventRepository;
 import com.ardom.automotive_event_api.event.EventStatus;
 import com.ardom.automotive_event_api.event.exception.EventNotFoundException;
+import com.ardom.automotive_event_api.storage.FileStorageService;
+import com.ardom.automotive_event_api.storage.dto.response.PresignedDownloadResponse;
 import com.ardom.automotive_event_api.user.Role;
 import com.ardom.automotive_event_api.user.User;
 import com.ardom.automotive_event_api.user.UserMapper;
@@ -31,6 +33,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.Authentication;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -52,11 +55,14 @@ class ApplicationServiceTest {
     @Mock
     private EventRepository eventRepository;
     @Mock
+    private FileStorageService fileStorageService;
+    @Mock
     private Authentication authentication;
 
     private final UserMapper userMapper = new UserMapper();
     private final ApplicationMapper applicationMapper = new ApplicationMapper(userMapper);
-    private final CarMapper carMapper = new CarMapper();
+    private CarMapper carMapper;
+
     private ApplicationService applicationService;
 
     private User user;
@@ -64,6 +70,8 @@ class ApplicationServiceTest {
 
     @BeforeEach
     void setUp() {
+        carMapper = new CarMapper(fileStorageService);
+
         applicationService = new ApplicationService(
                 applicationRepository,
                 carRepository,
@@ -132,7 +140,9 @@ class ApplicationServiceTest {
         private final Long appId = 5L;
 
         private CarDto carDto() {
-            return new CarDto("BMW", "M3", (short) 2020, "story", List.of("key1", "key2"));
+            return new CarDto("BMW", "M3", (short) 2020, "story", List.of(
+                    "photos/" + user.getId() + "/uuid1.webp",
+                    "photos/" + user.getId() + "/uuid2.webp"));
         }
 
         @Test
@@ -149,9 +159,11 @@ class ApplicationServiceTest {
 
             Car savedCar = Car.builder().id(50L).brand("BMW").model("M3").year((short) 2020)
                     .story("story").application(application).build();
+            when(fileStorageService.generateDownloadUrl("photos/" + user.getId() + "/random.webp"))
+                    .thenReturn(new PresignedDownloadResponse("https://fake-url", Instant.now().plusSeconds(300)));
             when(carRepository.saveAll(anyList())).thenReturn(List.of(savedCar));
 
-            CarPhoto savedPhoto = CarPhoto.builder().id(200L).s3Key("key1").car(savedCar).build();
+            CarPhoto savedPhoto = CarPhoto.builder().id(200L).s3Key("photos/" + user.getId() + "/random.webp").car(savedCar).build();
             when(carPhotoRepository.saveAll(anyList())).thenReturn(List.of(savedPhoto));
 
             when(applicationRepository.findById(appId)).thenReturn(Optional.of(application));
@@ -404,12 +416,14 @@ class ApplicationServiceTest {
                     .fee(BigDecimal.valueOf(50)).build();
             Car car = Car.builder().id(20L).brand("BMW").model("M3").year((short) 2021)
                     .application(application).build();
-            CarPhoto photo = CarPhoto.builder().id(30L).s3Key("key").car(car).build();
+            CarPhoto photo = CarPhoto.builder().id(30L).s3Key("photos/" + user.getId() + "/random.webp").car(car).build();
 
             when(applicationRepository.findById(1L)).thenReturn(Optional.of(application));
             when(authentication.getPrincipal()).thenReturn(user);
             when(carRepository.findAllByApplicationId(1L)).thenReturn(List.of(car));
             when(carPhotoRepository.findAllByCarIdIn(List.of(20L))).thenReturn(List.of(photo));
+            when(fileStorageService.generateDownloadUrl("photos/" + user.getId() + "/random.webp"))
+                    .thenReturn(new PresignedDownloadResponse("https://fake-url", Instant.now().plusSeconds(300)));
 
             // when
             ApplicationResponse response = applicationService.getApplication(authentication, 1L);
@@ -417,6 +431,7 @@ class ApplicationServiceTest {
             // then
             assertThat(response.cars()).hasSize(1);
             assertThat(response.cars().getFirst().carPhotos()).hasSize(1);
+            assertThat(response.cars().getFirst().carPhotos().getFirst().url()).isEqualTo("https://fake-url");
             assertThat(response.id()).isEqualTo(1L);
             assertThat(response.status()).isEqualTo(ApplicationStatus.PENDING);
             assertThat(response.fee()).isEqualByComparingTo("50");

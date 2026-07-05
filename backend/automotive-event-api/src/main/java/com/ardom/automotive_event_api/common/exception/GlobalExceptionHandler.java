@@ -10,6 +10,7 @@ import com.ardom.automotive_event_api.event.exception.DeletingNotDraftEventExcep
 import com.ardom.automotive_event_api.event.exception.EventNotEditableException;
 import com.ardom.automotive_event_api.event.exception.EventNotFoundException;
 import com.ardom.automotive_event_api.event.exception.InvalidStatusTransitionException;
+import com.ardom.automotive_event_api.storage.exception.UnsupportedFiletypeException;
 import com.ardom.automotive_event_api.user.exception.UserNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -113,8 +114,23 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(UserAlreadyHasApplicationException.class)
-    public ResponseEntity<ErrorResponse> handleUserAlreadyHasApplicationException(UserAlreadyHasApplicationException e){
+    public ResponseEntity<ErrorResponse> handleUserAlreadyHasApplicationException(UserAlreadyHasApplicationException e) {
         return buildResponse(HttpStatus.CONFLICT, e.getMessage());
+    }
+
+    @ExceptionHandler(UnsupportedFiletypeException.class)
+    public ResponseEntity<ErrorResponse> handleUnsupportedFiletypeException(UnsupportedFiletypeException e) {
+        return buildResponse(HttpStatus.BAD_REQUEST, e.getMessage());
+    }
+
+    @ExceptionHandler(InvalidPhotoKeyException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidPhotoKeyException(InvalidPhotoKeyException e) {
+        return buildResponse(HttpStatus.BAD_REQUEST, e.getMessage());
+    }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<ErrorResponse> handleIllegalArgumentException(IllegalArgumentException e) {
+        return buildResponse(HttpStatus.BAD_REQUEST, e.getMessage());
     }
 
     @ExceptionHandler(Exception.class)

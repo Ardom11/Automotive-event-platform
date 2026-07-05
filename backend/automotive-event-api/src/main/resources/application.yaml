@@ -28,6 +28,11 @@ application:
     jwt:
       secret: ${SECRET_KEY}
       expiration: 3600000
+aws:
+  s3:
+    bucket-name: automotive-event-api-dev
+    region: eu-north-1
+    presigned-url-expiration-minutes: 5
 ---
 spring:
   config:

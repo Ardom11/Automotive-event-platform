@@ -92,6 +92,17 @@ public class ApplicationService {
                             + carDtos.size() + " more (max 5 total)");
         }
 
+        List<String> photoKeys = request.cars().stream()
+                .map(CarDto::photoKeys)
+                .flatMap(List::stream)
+                .toList();
+
+        photoKeys.forEach(key -> {
+            if (!isUserOwnPhoto(user.getId(), key)) {
+                throw new InvalidPhotoKeyException("Invalid photo key: " + key);
+            }
+        });
+
         List<Car> savedCars = carRepository.saveAll(
                 carDtos.stream()
                         .map(carDto -> carMapper.toEntity(carDto, application))
@@ -312,5 +323,10 @@ public class ApplicationService {
     private Application getApplicationById(Long id) {
         return applicationRepository.findById(id)
                 .orElseThrow(() -> new ApplicationNotFoundException("Application with id " + id + " is not found"));
+    }
+
+    private boolean isUserOwnPhoto(Long userId, String key) {
+        Long extractedUserId = Long.valueOf(key.split("/")[1]);
+        return userId.equals(extractedUserId);
     }
 }

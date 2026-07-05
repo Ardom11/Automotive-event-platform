@@ -5,12 +5,17 @@ import com.ardom.automotive_event_api.application.dto.CarDto;
 import com.ardom.automotive_event_api.application.dto.response.CarPhotoResponse;
 import com.ardom.automotive_event_api.application.dto.response.CarResponse;
 import com.ardom.automotive_event_api.application.dto.response.CarSummaryResponse;
+import com.ardom.automotive_event_api.storage.FileStorageService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
 
 @Component
+@RequiredArgsConstructor
 public class CarMapper {
+
+    private final FileStorageService fileStorageService;
 
     public CarResponse toResponse(Car car, List<CarPhotoResponse> photos) {
         return new CarResponse(
@@ -34,9 +39,10 @@ public class CarMapper {
     }
 
     public CarPhotoResponse toResponse(CarPhoto photo) {
+        String url = fileStorageService.generateDownloadUrl(photo.getS3Key()).downloadUrl();
         return new CarPhotoResponse(
                 photo.getId(),
-                "http://fakes3url" // TODO implement url generation
+                url
         );
     }
 
