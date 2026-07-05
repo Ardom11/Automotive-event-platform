@@ -1,5 +1,6 @@
 package com.ardom.automotive_event_api.application;
 
+import com.ardom.automotive_event_api.common.email.EmailService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -12,6 +13,7 @@ import java.util.List;
 public class ApplicationExpirationService {
 
     private final ApplicationRepository applicationRepository;
+    private final EmailService emailService;
 
     @Transactional
     public void expireUnpaidApplications() {
@@ -23,6 +25,9 @@ public class ApplicationExpirationService {
                         today.plusDays(7).atStartOfDay()
                 );
 
-        toExpire.forEach(app -> app.setStatus(ApplicationStatus.EXPIRED));
+        toExpire.forEach(app -> {
+            app.setStatus(ApplicationStatus.EXPIRED);
+            emailService.sendApplicationExpired(applicationRepository.save(app));
+        });
     }
 }

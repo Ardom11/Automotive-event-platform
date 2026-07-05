@@ -8,6 +8,7 @@ import com.ardom.automotive_event_api.application.dto.request.UpdateApplicationR
 import com.ardom.automotive_event_api.application.dto.response.AdminApplicationResponse;
 import com.ardom.automotive_event_api.application.dto.response.ApplicationResponse;
 import com.ardom.automotive_event_api.application.exception.*;
+import com.ardom.automotive_event_api.common.email.EmailService;
 import com.ardom.automotive_event_api.event.Event;
 import com.ardom.automotive_event_api.event.EventRepository;
 import com.ardom.automotive_event_api.event.EventStatus;
@@ -58,6 +59,8 @@ class ApplicationServiceTest {
     private FileStorageService fileStorageService;
     @Mock
     private Authentication authentication;
+    @Mock
+    private EmailService emailService;
 
     private final UserMapper userMapper = new UserMapper();
     private final ApplicationMapper applicationMapper = new ApplicationMapper(userMapper);
@@ -78,7 +81,8 @@ class ApplicationServiceTest {
                 carPhotoRepository,
                 eventRepository,
                 applicationMapper,
-                carMapper
+                carMapper,
+                emailService
         );
 
         user = User.builder().id(1L).name("John").surname("Doe").email("john@example.com").role(Role.USER).build();

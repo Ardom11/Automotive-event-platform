@@ -7,6 +7,7 @@ import com.ardom.automotive_event_api.application.dto.request.RejectApplicationR
 import com.ardom.automotive_event_api.application.dto.request.UpdateApplicationRequest;
 import com.ardom.automotive_event_api.application.dto.response.*;
 import com.ardom.automotive_event_api.application.exception.*;
+import com.ardom.automotive_event_api.common.email.EmailService;
 import com.ardom.automotive_event_api.event.Event;
 import com.ardom.automotive_event_api.event.EventRepository;
 import com.ardom.automotive_event_api.event.EventStatus;
@@ -37,6 +38,7 @@ public class ApplicationService {
     private final EventRepository eventRepository;
     private final ApplicationMapper applicationMapper;
     private final CarMapper carMapper;
+    private final EmailService emailService;
 
     // -------------------------------------------------------------------------
     // Public
@@ -159,7 +161,8 @@ public class ApplicationService {
 
         application.setStatus(ApplicationStatus.PENDING);
         application.setRejectionReason(null);
-        applicationRepository.save(application);
+
+        emailService.sendApplicationReceived(applicationRepository.save(application));
 
         return getApplication(authentication, id);
     }
@@ -263,6 +266,8 @@ public class ApplicationService {
 
         application.setStatus(ApplicationStatus.APPROVED_WAITING_PAYMENT);
 
+        emailService.sendApplicationApproved(applicationRepository.save(application));
+
         return getApplicationForAdmin(id);
     }
 
@@ -278,6 +283,8 @@ public class ApplicationService {
         if (!request.rejectionReason().isBlank()) {
             application.setRejectionReason(request.rejectionReason());
         }
+
+        emailService.sendApplicationRejected(applicationRepository.save(application));
 
         return getApplicationForAdmin(id);
     }

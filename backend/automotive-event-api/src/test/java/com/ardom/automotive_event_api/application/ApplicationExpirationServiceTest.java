@@ -1,5 +1,6 @@
 package com.ardom.automotive_event_api.application;
 
+import com.ardom.automotive_event_api.common.email.EmailService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -25,6 +26,9 @@ class ApplicationExpirationServiceTest {
 
     @Mock
     private ApplicationRepository applicationRepository;
+
+    @Mock
+    private EmailService emailService;
 
     @InjectMocks
     private ApplicationExpirationService applicationExpirationService;
