@@ -285,8 +285,8 @@ class ApplicationServiceTest {
         }
 
         @Test
-        @DisplayName("Should throw ApplicationNotEditableException when application has not valid status")
-        void submitApplication_shouldThrowApplicationNotEditableException_whenStatusIsNotDraftRejected() {
+        @DisplayName("Should throw ApplicationNotSubmittableException when application has not valid status")
+        void submitApplication_shouldThrowApplicationNotSubmittableException_whenStatusIsNotDraftRejected() {
             // given
             Application application = getApplication();
             application.setStatus(ApplicationStatus.PENDING);
@@ -295,7 +295,7 @@ class ApplicationServiceTest {
 
             // when / then
             assertThatThrownBy(() -> applicationService.submitApplication(authentication, application.getId()))
-                    .isInstanceOf(ApplicationNotEditableException.class);
+                    .isInstanceOf(ApplicationNotSubmittableException.class);
             verify(applicationRepository, never()).save(any(Application.class));
         }
 

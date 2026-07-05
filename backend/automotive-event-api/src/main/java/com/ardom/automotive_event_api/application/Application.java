@@ -57,7 +57,7 @@ public class Application {
     private LocalDateTime modifiedAt;
 
     public boolean isSubmittable() {
-        return this.status == ApplicationStatus.DRAFT
+        return (this.status == ApplicationStatus.DRAFT || this.status == ApplicationStatus.REJECTED)
                 && LocalDate.now().isBefore(event.getApplicationDeadline());
     }
 }

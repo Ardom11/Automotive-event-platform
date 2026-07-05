@@ -21,6 +21,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -50,6 +51,10 @@ public class ApplicationService {
 
         if (event.getStatus() != EventStatus.PUBLISHED) {
             throw new EventNotFoundException("Event with id " + request.eventId() + " is not found");
+        }
+
+        if (LocalDate.now().isAfter(event.getApplicationDeadline())) {
+            throw new ApplicationDeadlineException("Application cannot be created less than 2 weeks before event");
         }
 
         User user = (User) authentication.getPrincipal();
@@ -138,7 +143,7 @@ public class ApplicationService {
 
         if (application.getStatus() != ApplicationStatus.DRAFT
                 && application.getStatus() != ApplicationStatus.REJECTED) {
-            throw new ApplicationNotEditableException(
+            throw new ApplicationNotSubmittableException(
                     "Application with status " + application.getStatus() + " cannot be submitted");
         }
 
@@ -148,7 +153,8 @@ public class ApplicationService {
         }
 
         if (!application.isSubmittable()) {
-            throw new ApplicationNotSubmittableException("The application can no longer be submitted.");
+            application.setStatus(ApplicationStatus.EXPIRED);
+            throw new ApplicationNotSubmittableException("The application can no longer be submitted (must be submitted at least 2 weeks before event)");
         }
 
         application.setStatus(ApplicationStatus.PENDING);

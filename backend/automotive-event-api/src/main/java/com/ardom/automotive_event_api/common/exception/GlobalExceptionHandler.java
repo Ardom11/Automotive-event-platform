@@ -128,6 +128,11 @@ public class GlobalExceptionHandler {
         return buildResponse(HttpStatus.BAD_REQUEST, e.getMessage());
     }
 
+    @ExceptionHandler(ApplicationDeadlineException.class)
+    public ResponseEntity<ErrorResponse> handleApplicationDeadlineException(ApplicationDeadlineException e) {
+        return buildResponse(HttpStatus.BAD_REQUEST, e.getMessage());
+    }
+
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<ErrorResponse> handleIllegalArgumentException(IllegalArgumentException e) {
         return buildResponse(HttpStatus.BAD_REQUEST, e.getMessage());
