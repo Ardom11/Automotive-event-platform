@@ -74,5 +74,3 @@ public class Event {
         return dateStart.toLocalDate().minusDays(7);
     }
 }
-
-
