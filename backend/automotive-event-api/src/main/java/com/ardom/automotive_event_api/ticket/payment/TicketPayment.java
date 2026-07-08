@@ -1,4 +1,4 @@
-package com.ardom.automotive_event_api.ticket;
+package com.ardom.automotive_event_api.ticket.payment;
 
 import com.ardom.automotive_event_api.payment.PaymentStatus;
 import com.ardom.automotive_event_api.user.User;

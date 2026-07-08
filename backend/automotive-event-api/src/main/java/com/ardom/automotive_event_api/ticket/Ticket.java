@@ -1,6 +1,7 @@
 package com.ardom.automotive_event_api.ticket;
 
 import com.ardom.automotive_event_api.event.Event;
+import com.ardom.automotive_event_api.ticket.payment.TicketPayment;
 import com.ardom.automotive_event_api.user.User;
 import jakarta.persistence.*;
 import lombok.*;
