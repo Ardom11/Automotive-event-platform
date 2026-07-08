@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 
 public interface ApplicationRepository extends JpaRepository<Application, Long> {
@@ -18,4 +19,6 @@ public interface ApplicationRepository extends JpaRepository<Application, Long> 
             ApplicationStatus status,
             LocalDateTime threshold
     );
+
+    Optional<Application> findByIdAndStatusAndUser(Long id, ApplicationStatus status, User user);
 }

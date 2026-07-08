@@ -6,12 +6,11 @@ import com.ardom.automotive_event_api.auth.exception.InvalidGoogleTokenException
 import com.ardom.automotive_event_api.auth.exception.InvalidRefreshTokenException;
 import com.ardom.automotive_event_api.auth.exception.UserAlreadyExistsException;
 import com.ardom.automotive_event_api.common.dto.response.ErrorResponse;
-import com.ardom.automotive_event_api.event.exception.DeletingNotDraftEventException;
-import com.ardom.automotive_event_api.event.exception.EventNotEditableException;
-import com.ardom.automotive_event_api.event.exception.EventNotFoundException;
-import com.ardom.automotive_event_api.event.exception.InvalidStatusTransitionException;
+import com.ardom.automotive_event_api.event.exception.*;
+import com.ardom.automotive_event_api.payment.exception.PaymentAlreadyInitiatedException;
 import com.ardom.automotive_event_api.storage.exception.UnsupportedFiletypeException;
 import com.ardom.automotive_event_api.user.exception.UserNotFoundException;
+import com.stripe.exception.StripeException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -131,6 +130,26 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(ApplicationDeadlineException.class)
     public ResponseEntity<ErrorResponse> handleApplicationDeadlineException(ApplicationDeadlineException e) {
         return buildResponse(HttpStatus.BAD_REQUEST, e.getMessage());
+    }
+
+    @ExceptionHandler(PaymentAlreadyInitiatedException.class)
+    public ResponseEntity<ErrorResponse> handlePaymentAlreadyInitiatedException(PaymentAlreadyInitiatedException e) {
+        return buildResponse(HttpStatus.CONFLICT, e.getMessage());
+    }
+
+    @ExceptionHandler(StripeException.class)
+    public ResponseEntity<ErrorResponse> handleStripeException(StripeException e) {
+        return buildResponse(HttpStatus.BAD_GATEWAY, e.getMessage());
+    }
+
+    @ExceptionHandler(EventSoldOutException.class)
+    public ResponseEntity<ErrorResponse> handleEventSoldOutException(EventSoldOutException e) {
+        return buildResponse(HttpStatus.CONFLICT, e.getMessage());
+    }
+
+    @ExceptionHandler(NotEnoughEventTicketsException.class)
+    public ResponseEntity<ErrorResponse> handleNotEnoughEventTicketsException(NotEnoughEventTicketsException e) {
+        return buildResponse(HttpStatus.CONFLICT, e.getMessage());
     }
 
     @ExceptionHandler(IllegalArgumentException.class)

@@ -1,5 +1,6 @@
-package com.ardom.automotive_event_api.application;
+package com.ardom.automotive_event_api.application.payment;
 
+import com.ardom.automotive_event_api.application.Application;
 import com.ardom.automotive_event_api.payment.PaymentStatus;
 import jakarta.persistence.*;
 import lombok.*;
@@ -27,7 +28,7 @@ public class ApplicationPayment {
     private String stripePaymentId;
 
     @OneToOne
-    @JoinColumn(name = "application_id", nullable = false)
+    @JoinColumn(name = "application_id", nullable = false, unique = true)
     private Application application;
 
     @Column(name = "amount_paid", nullable = false, precision = 10, scale = 2)

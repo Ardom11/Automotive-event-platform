@@ -16,12 +16,12 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/payments/tickets")
+@RequestMapping("/tickets")
 @RequiredArgsConstructor
 public class TicketPaymentController {
     private final TicketPaymentService service;
 
-    @PostMapping
+    @PostMapping("/checkout")
     @PreAuthorize("hasRole('USER')")
     public ResponseEntity<CheckoutResponse> purchaseAsUser(Authentication authentication,
                                                            @Valid @RequestBody TicketPurchaseRequest request) throws StripeException {
@@ -29,7 +29,7 @@ public class TicketPaymentController {
         return ResponseEntity.ok(service.initiateCheckout(request, user));
     }
 
-    @PostMapping("/guest")
+    @PostMapping("/guest-checkout")
     public ResponseEntity<CheckoutResponse> purchaseAsGuest(
             @Valid @RequestBody TicketPurchaseGuestRequest request) throws StripeException {
         return ResponseEntity.ok(service.initiateCheckout(request));
