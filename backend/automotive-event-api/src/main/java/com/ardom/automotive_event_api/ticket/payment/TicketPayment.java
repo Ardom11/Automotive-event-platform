@@ -24,7 +24,7 @@ public class TicketPayment {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "stripe_payment_id", nullable = false, unique = true)
+    @Column(name = "stripe_payment_id", unique = true)
     private String stripePaymentId;
 
     @ManyToOne(fetch = FetchType.LAZY)

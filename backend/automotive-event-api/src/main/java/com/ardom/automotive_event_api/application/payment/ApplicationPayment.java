@@ -24,7 +24,7 @@ public class ApplicationPayment {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "stripe_payment_id", nullable = false)
+    @Column(name = "stripe_payment_id", unique = true)
     private String stripePaymentId;
 
     @OneToOne
