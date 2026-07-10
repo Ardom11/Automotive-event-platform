@@ -1,5 +1,6 @@
 package com.ardom.automotive_event_api.ticket.payment;
 
+import com.ardom.automotive_event_api.application.exception.TicketPaymentNotFoundException;
 import com.ardom.automotive_event_api.event.Event;
 import com.ardom.automotive_event_api.event.EventRepository;
 import com.ardom.automotive_event_api.event.EventStatus;
@@ -8,22 +9,32 @@ import com.ardom.automotive_event_api.event.exception.EventSoldOutException;
 import com.ardom.automotive_event_api.event.exception.NotEnoughEventTicketsException;
 import com.ardom.automotive_event_api.payment.PaymentStatus;
 import com.ardom.automotive_event_api.payment.dto.response.CheckoutResponse;
+import com.ardom.automotive_event_api.ticket.Ticket;
 import com.ardom.automotive_event_api.ticket.TicketRepository;
+import com.ardom.automotive_event_api.ticket.TicketStatus;
 import com.ardom.automotive_event_api.ticket.dto.request.TicketPurchaseGuestRequest;
 import com.ardom.automotive_event_api.ticket.dto.request.TicketPurchaseRequest;
+import com.ardom.automotive_event_api.ticket.util.TicketCodeGenerator;
 import com.ardom.automotive_event_api.user.User;
 import com.stripe.exception.StripeException;
 import com.stripe.model.checkout.Session;
 import com.stripe.param.checkout.SessionCreateParams;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
 public class TicketPaymentService {
+    @Value("${application.base-url}")
+    private String baseUrl;
+
     private final TicketPaymentRepository ticketPaymentRepository;
     private final TicketRepository ticketRepository;
     private final EventRepository eventRepository;
@@ -33,6 +44,7 @@ public class TicketPaymentService {
         Event event = getValidEvent(request.eventId(), request.quantity());
 
         TicketPayment payment = TicketPayment.builder()
+                .event(event)
                 .user(user)
                 .quantity(request.quantity())
                 .amountPaid(event.getTicketPrice().multiply(BigDecimal.valueOf(request.quantity())))
@@ -54,6 +66,7 @@ public class TicketPaymentService {
         Event event = getValidEvent(request.eventId(), request.quantity());
 
         TicketPayment payment = TicketPayment.builder()
+                .event(event)
                 .guestName(request.guestName())
                 .guestSurname(request.guestSurname())
                 .guestEmail(request.guestEmail())
@@ -70,6 +83,35 @@ public class TicketPaymentService {
         ticketPaymentRepository.save(payment);
 
         return new CheckoutResponse(session.getUrl());
+    }
+
+    @Transactional
+    public void handleSuccessfulCheckout(Long ticketPaymentId) {
+        TicketPayment payment = ticketPaymentRepository.findById(ticketPaymentId)
+                .orElseThrow(() -> new TicketPaymentNotFoundException("Ticket payment with id " + ticketPaymentId + " not found"));
+
+        if (payment.getStatus() == PaymentStatus.SUCCEEDED) {
+            return;
+        }
+
+        payment.setStatus(PaymentStatus.SUCCEEDED);
+        payment.setPaidAt(LocalDateTime.now());
+
+        List<Ticket> tickets = new ArrayList<>();
+        for (int i = 0; i < payment.getQuantity(); i++) {
+            Ticket ticket = Ticket.builder()
+                    .payment(payment)
+                    .event(payment.getEvent())
+                    .user(payment.getUser())
+                    .guestEmail(payment.getGuestEmail())
+                    .code(TicketCodeGenerator.generate())
+                    .status(TicketStatus.ACTIVE)
+                    .price(payment.getEvent().getTicketPrice())
+                    .build();
+            tickets.add(ticket);
+        }
+
+        ticketRepository.saveAll(tickets);
     }
 
     private Event getValidEvent(Long eventId, int amountToPurchase) {
@@ -92,10 +134,10 @@ public class TicketPaymentService {
     private Session createSession(Event event, Long paymentId, String email, int quantity) throws StripeException {
         SessionCreateParams params = SessionCreateParams.builder()
                 .setMode(SessionCreateParams.Mode.PAYMENT)
-                .setSuccessUrl("https://localhost:8080/events")
-                .setCancelUrl(String.format("https://localhost:8080/events/%s", event.getId()))
+                .setSuccessUrl(baseUrl + "/events")
+                .setCancelUrl(baseUrl + "/events/" + event.getId())
                 .putMetadata("type", "TICKET")
-                .putMetadata("ticketPaymentId", paymentId.toString())
+                .putMetadata("referenceId", paymentId.toString())
                 .setCustomerEmail(email)
                 .addLineItem(SessionCreateParams.LineItem.builder()
                         .setQuantity((long) quantity)

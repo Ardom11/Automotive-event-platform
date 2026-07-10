@@ -61,7 +61,8 @@ public class SecurityConfig {
             "/auth/**",
             "/events/**",
             "/error",
-            "/tickets/guest-checkout"
+            "/tickets/guest-checkout",
+            "/webhooks/stripe"
     };
 
     public static final String[] SWAGGER_ENDPOINTS = {

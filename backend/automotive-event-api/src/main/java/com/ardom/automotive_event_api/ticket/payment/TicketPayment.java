@@ -1,5 +1,6 @@
 package com.ardom.automotive_event_api.ticket.payment;
 
+import com.ardom.automotive_event_api.event.Event;
 import com.ardom.automotive_event_api.payment.PaymentStatus;
 import com.ardom.automotive_event_api.user.User;
 import jakarta.persistence.*;
@@ -26,6 +27,10 @@ public class TicketPayment {
 
     @Column(name = "stripe_payment_id", unique = true)
     private String stripePaymentId;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "event_id")
+    private Event event;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")

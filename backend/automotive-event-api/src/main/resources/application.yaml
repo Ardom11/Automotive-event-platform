@@ -36,11 +36,13 @@ spring:
             enable: true
 stripe:
   secret-key: ${STRIPE_SECRET_KEY}
+  webhook-secret: ${STRIPE_WEBHOOK_SECRET}
 application:
   security:
     jwt:
       secret: ${SECRET_KEY}
       expiration: 3600000
+  base-url: http://localhost:8080
 aws:
   s3:
     bucket-name: automotive-event-api-dev

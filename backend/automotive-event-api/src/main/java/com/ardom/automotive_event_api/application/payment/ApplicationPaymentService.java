@@ -4,6 +4,8 @@ import com.ardom.automotive_event_api.application.Application;
 import com.ardom.automotive_event_api.application.ApplicationRepository;
 import com.ardom.automotive_event_api.application.ApplicationStatus;
 import com.ardom.automotive_event_api.application.exception.ApplicationNotFoundException;
+import com.ardom.automotive_event_api.application.exception.ApplicationPaymentNotFoundException;
+import com.ardom.automotive_event_api.common.email.EmailService;
 import com.ardom.automotive_event_api.payment.PaymentStatus;
 import com.ardom.automotive_event_api.payment.dto.response.CheckoutResponse;
 import com.ardom.automotive_event_api.payment.exception.PaymentAlreadyInitiatedException;
@@ -13,15 +15,21 @@ import com.stripe.model.checkout.Session;
 import com.stripe.param.checkout.SessionCreateParams;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 @Service
 @RequiredArgsConstructor
 public class ApplicationPaymentService {
+    @Value("${application.base-url}")
+    private String baseUrl;
+
     private final ApplicationPaymentRepository applicationPaymentRepository;
     private final ApplicationRepository applicationRepository;
+    private final EmailService emailService;
 
     @Transactional
     public CheckoutResponse initiateCheckout(Long applicationId, User user) throws StripeException {
@@ -43,6 +51,24 @@ public class ApplicationPaymentService {
         return new CheckoutResponse(session.getUrl());
     }
 
+    @Transactional
+    public void handleSuccessfulCheckout(Long applicationPaymentId) {
+        ApplicationPayment payment = applicationPaymentRepository.findById(applicationPaymentId)
+                .orElseThrow(() -> new ApplicationPaymentNotFoundException("Application payment with id " + applicationPaymentId + " not found"));
+
+        if (payment.getStatus() == PaymentStatus.SUCCEEDED) {
+            return;
+        }
+
+        payment.setStatus(PaymentStatus.SUCCEEDED);
+        payment.setPaidAt(LocalDateTime.now());
+
+        Application application = payment.getApplication();
+        application.setStatus(ApplicationStatus.COMPLETED);
+
+        emailService.sendPaymentConfirmed(application);
+    }
+
     private Application getValidApplication(Long applicationId, User user) {
         Application application = applicationRepository.findByIdAndStatusAndUser(applicationId, ApplicationStatus.APPROVED_WAITING_PAYMENT, user)
                 .orElseThrow(() -> new ApplicationNotFoundException("Application with id " + applicationId + " not found"));
@@ -57,10 +83,10 @@ public class ApplicationPaymentService {
     private Session createSession(Application application, Long paymentId, String email) throws StripeException {
         SessionCreateParams params = SessionCreateParams.builder()
                 .setMode(SessionCreateParams.Mode.PAYMENT)
-                .setSuccessUrl("https://localhost:8080/applications")
-                .setCancelUrl(String.format("https://localhost:8080/applications/%s", application.getId()))
+                .setSuccessUrl(baseUrl + "/applications/" + application.getId())
+                .setCancelUrl(baseUrl + "/applications/")
                 .putMetadata("type", "APPLICATION")
-                .putMetadata("applicationPaymentId", paymentId.toString())
+                .putMetadata("referenceId", paymentId.toString())
                 .setCustomerEmail(email)
                 .addLineItem(SessionCreateParams.LineItem.builder()
                         .setQuantity(1L)

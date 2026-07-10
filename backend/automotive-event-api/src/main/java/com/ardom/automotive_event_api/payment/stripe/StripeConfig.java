@@ -1,4 +1,4 @@
-package com.ardom.automotive_event_api.payment;
+package com.ardom.automotive_event_api.payment.stripe;
 
 import com.stripe.Stripe;
 import jakarta.annotation.PostConstruct;

@@ -8,6 +8,7 @@ import com.ardom.automotive_event_api.auth.exception.UserAlreadyExistsException;
 import com.ardom.automotive_event_api.common.dto.response.ErrorResponse;
 import com.ardom.automotive_event_api.event.exception.*;
 import com.ardom.automotive_event_api.payment.exception.PaymentAlreadyInitiatedException;
+import com.ardom.automotive_event_api.payment.exception.WebhookException;
 import com.ardom.automotive_event_api.storage.exception.UnsupportedFiletypeException;
 import com.ardom.automotive_event_api.user.exception.UserNotFoundException;
 import com.stripe.exception.StripeException;
@@ -150,6 +151,21 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(NotEnoughEventTicketsException.class)
     public ResponseEntity<ErrorResponse> handleNotEnoughEventTicketsException(NotEnoughEventTicketsException e) {
         return buildResponse(HttpStatus.CONFLICT, e.getMessage());
+    }
+
+    @ExceptionHandler(ApplicationPaymentNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleApplicationPaymentNotFoundException(ApplicationPaymentNotFoundException e) {
+        return buildResponse(HttpStatus.NOT_FOUND, e.getMessage());
+    }
+
+    @ExceptionHandler(TicketPaymentNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleTicketPaymentNotFoundException(TicketPaymentNotFoundException e) {
+        return buildResponse(HttpStatus.NOT_FOUND, e.getMessage());
+    }
+
+    @ExceptionHandler(WebhookException.class)
+    public ResponseEntity<ErrorResponse> handleWebhookException(WebhookException e) {
+        return buildResponse(HttpStatus.BAD_GATEWAY, e.getMessage());
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
