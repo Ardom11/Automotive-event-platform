@@ -1,6 +1,7 @@
 package com.ardom.automotive_event_api.common.pdf;
 
 import com.ardom.automotive_event_api.event.Event;
+import com.ardom.automotive_event_api.event.EventLocation;
 import com.ardom.automotive_event_api.ticket.Ticket;
 import org.openpdf.text.*;
 import org.openpdf.text.pdf.PdfWriter;
@@ -30,7 +31,7 @@ public class TicketPdfGenerator {
 
             document.close();
             return out.toByteArray();
-        } catch (Exception e){
+        } catch (Exception e) {
             throw new RuntimeException(e.getMessage());
         }
     }
@@ -48,22 +49,24 @@ public class TicketPdfGenerator {
 
         document.add(new Paragraph("Event Details"));
         document.add(new Paragraph("Event: " + event.getName()));
-        document.add(new Paragraph("Date: " +
-                event.getDateStart().format(DateTimeFormatter.ofPattern("dd MMM yyyy HH:mm"))));
-        document.add(new Paragraph("Location: " + event.getLocation()));
+        document.add(new Paragraph(String.format("Date: %s - %s",
+                event.getDateStart().format(DateTimeFormatter.ofPattern("dd MMM yyyy HH:mm")),
+                event.getDateEnd().format(DateTimeFormatter.ofPattern("dd MMM yyyy HH:mm")))));
+        EventLocation location = event.getLocation();
+        document.add(new Paragraph("Place: " + location.getPlace()));
+        document.add(new Paragraph(String.format("%s, %s", location.getCity(), location.getCountry())));
+        document.add(new Paragraph(location.getAddress()));
         document.add(new Paragraph("\n"));
     }
 
     private void addTicketInfo() {
         String holderName = ticket.getUser() != null
                 ? ticket.getUser().getName() + " " + ticket.getUser().getSurname()
-                : ticket.getPayment().getGuestName() + " " +
-                ticket.getPayment().getGuestSurname();
+                : ticket.getPayment().getGuestName() + " " + ticket.getPayment().getGuestSurname();
 
         document.add(new Paragraph("Ticket Holder"));
         document.add(new Paragraph("Name: " + holderName));
-        document.add(new Paragraph("Ticket #: " + ticket.getCode()));
-        document.add(new Paragraph("\n"));
+        document.add(new Paragraph(String.format("Ticket №: %s\n", ticket.getCode())));
     }
 
     private void addTicketCode() {

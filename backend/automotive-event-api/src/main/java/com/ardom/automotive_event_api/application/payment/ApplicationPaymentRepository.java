@@ -4,4 +4,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface ApplicationPaymentRepository extends JpaRepository<ApplicationPayment, Long> {
     boolean existsByApplicationId(Long id);
+
+    ApplicationPayment findByApplicationId(Long id);
 }

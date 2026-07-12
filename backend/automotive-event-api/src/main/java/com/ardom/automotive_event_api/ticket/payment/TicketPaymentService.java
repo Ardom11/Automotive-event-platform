@@ -1,6 +1,7 @@
 package com.ardom.automotive_event_api.ticket.payment;
 
 import com.ardom.automotive_event_api.application.exception.TicketPaymentNotFoundException;
+import com.ardom.automotive_event_api.common.email.EmailService;
 import com.ardom.automotive_event_api.event.Event;
 import com.ardom.automotive_event_api.event.EventRepository;
 import com.ardom.automotive_event_api.event.EventStatus;
@@ -38,6 +39,7 @@ public class TicketPaymentService {
     private final TicketPaymentRepository ticketPaymentRepository;
     private final TicketRepository ticketRepository;
     private final EventRepository eventRepository;
+    private final EmailService emailService;
 
     @Transactional
     public CheckoutResponse initiateCheckout(TicketPurchaseRequest request, User user) throws StripeException {
@@ -112,6 +114,11 @@ public class TicketPaymentService {
         }
 
         ticketRepository.saveAll(tickets);
+        emailService.sendTicket(
+                tickets,
+                payment.getUser() != null ? payment.getUser().getEmail() : payment.getGuestEmail(),
+                payment.getEvent().getName()
+        );
     }
 
     private Event getValidEvent(Long eventId, int amountToPurchase) {

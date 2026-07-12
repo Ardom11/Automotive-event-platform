@@ -66,7 +66,10 @@ public class ApplicationPaymentService {
         Application application = payment.getApplication();
         application.setStatus(ApplicationStatus.COMPLETED);
 
-        emailService.sendPaymentConfirmed(application);
+        emailService.sendPaymentConfirmed(
+                application,
+                application.getUser(),
+                application.getEvent().getName());
     }
 
     private Application getValidApplication(Long applicationId, User user) {

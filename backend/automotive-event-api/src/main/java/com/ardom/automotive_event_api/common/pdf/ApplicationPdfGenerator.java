@@ -3,26 +3,37 @@ package com.ardom.automotive_event_api.common.pdf;
 import com.ardom.automotive_event_api.application.Application;
 import com.ardom.automotive_event_api.application.car.Car;
 import com.ardom.automotive_event_api.application.payment.ApplicationPayment;
-import com.ardom.automotive_event_api.event.Event;
+import com.ardom.automotive_event_api.user.User;
 import org.openpdf.text.*;
 import org.openpdf.text.pdf.PdfWriter;
 
 import java.io.ByteArrayOutputStream;
 import java.math.RoundingMode;
 import java.time.format.DateTimeFormatter;
-
 import java.util.List;
 
 public class ApplicationPdfGenerator {
 
     private final ApplicationPayment payment;
+    private final Application application;
+    private final User user;
     private final Document document;
     private final List<Car> cars;
+    private final String eventName;
 
-    public ApplicationPdfGenerator(ApplicationPayment payment, List<Car> cars) {
+    public ApplicationPdfGenerator(
+            ApplicationPayment payment,
+            Application application,
+            User user,
+            List<Car> cars,
+            String eventName) {
+
         this.payment = payment;
+        this.application = application;
+        this.user = user;
         this.document = new Document(PageSize.A4);
         this.cars = cars;
+        this.eventName = eventName;
     }
 
     public byte[] generate() {
@@ -51,13 +62,11 @@ public class ApplicationPdfGenerator {
     }
 
     private void addApplicationDetails() {
-        Application app = payment.getApplication();
-        Event event = app.getEvent();
-
+        document.add(new Paragraph(String.format("%s %s\n", user.getName(), user.getSurname())));
         document.add(new Paragraph("Event & Application"));
-        document.add(new Paragraph("Event: " + event.getName()));
-        document.add(new Paragraph("Application ID: " + app.getId()));
-        document.add(new Paragraph("Status: " + app.getStatus()));
+        document.add(new Paragraph("Event: " + eventName));
+        document.add(new Paragraph("Application ID: " + application.getId()));
+        document.add(new Paragraph("Status: " + application.getStatus()));
         document.add(new Paragraph("\n"));
     }
 
