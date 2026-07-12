@@ -10,6 +10,7 @@ import com.ardom.automotive_event_api.event.exception.*;
 import com.ardom.automotive_event_api.payment.exception.PaymentAlreadyInitiatedException;
 import com.ardom.automotive_event_api.payment.exception.WebhookException;
 import com.ardom.automotive_event_api.storage.exception.UnsupportedFiletypeException;
+import com.ardom.automotive_event_api.ticket.exception.TicketNotFoundException;
 import com.ardom.automotive_event_api.user.exception.UserNotFoundException;
 import com.stripe.exception.StripeException;
 import lombok.extern.slf4j.Slf4j;
@@ -171,6 +172,11 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<ErrorResponse> handleIllegalArgumentException(IllegalArgumentException e) {
         return buildResponse(HttpStatus.BAD_REQUEST, e.getMessage());
+    }
+
+    @ExceptionHandler(TicketNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleTicketNotFoundException(TicketNotFoundException e) {
+        return buildResponse(HttpStatus.NOT_FOUND, e.getMessage());
     }
 
     @ExceptionHandler(RuntimeException.class)
