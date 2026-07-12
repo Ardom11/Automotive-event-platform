@@ -27,21 +27,34 @@ public class StripeWebhookService {
         Event event = verifyAndConstruct(payload, sigHeader);
 
         String eventType = event.getType();
-        if (!eventType.equals("checkout.session.completed")) {
-            log.debug("Ignoring event type: {}", eventType);
-            return;
+        switch (eventType) {
+            case "checkout.session.completed" -> handleSession(event, true);
+            case "checkout.session.expired" -> handleSession(event, false);
+            default -> log.debug("Ignoring event type: {}", eventType);
         }
+    }
 
+
+    private void handleSession(Event event, boolean success) {
         Session session = (Session) event.getDataObjectDeserializer()
                 .getObject()
                 .orElseThrow(() -> new RuntimeException("Failed to deserialize session"));
 
         String paymentType = session.getMetadata().get("type");
         Long referenceId = Long.valueOf(session.getMetadata().get("referenceId"));
-        switch (paymentType) {
-            case "TICKET" -> ticketPaymentService.handleSuccessfulCheckout(referenceId);
-            case "APPLICATION" -> applicationPaymentService.handleSuccessfulCheckout(referenceId);
-            default -> log.warn("Unknown payment type: {}", paymentType);
+
+        if (success) {
+            switch (paymentType) {
+                case "TICKET" -> ticketPaymentService.handleSuccessfulCheckout(referenceId);
+                case "APPLICATION" -> applicationPaymentService.handleSuccessfulCheckout(referenceId);
+                default -> log.warn("Unknown payment type: {}", paymentType);
+            }
+        } else {
+            switch (paymentType) {
+                case "TICKET" -> ticketPaymentService.handleFailedCheckout(referenceId);
+                case "APPLICATION" -> applicationPaymentService.handleFailedCheckout(referenceId);
+                default -> log.warn("Unknown payment type: {}", paymentType);
+            }
         }
     }
 

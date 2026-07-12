@@ -20,6 +20,7 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -72,11 +73,26 @@ public class ApplicationPaymentService {
                 application.getEvent().getName());
     }
 
+    @Transactional
+    public void handleFailedCheckout(Long referenceId) {
+        ApplicationPayment payment = applicationPaymentRepository.findById(referenceId)
+                .orElseThrow(() -> new ApplicationNotFoundException("Application payment with id " + referenceId + " is not found"));
+
+        if (!payment.getStatus().equals(PaymentStatus.FAILED)) {
+            payment.setStatus(PaymentStatus.FAILED);
+        }
+    }
+
     private Application getValidApplication(Long applicationId, User user) {
         Application application = applicationRepository.findByIdAndStatusAndUser(applicationId, ApplicationStatus.APPROVED_WAITING_PAYMENT, user)
                 .orElseThrow(() -> new ApplicationNotFoundException("Application with id " + applicationId + " not found"));
 
-        if (applicationPaymentRepository.existsByApplicationId(applicationId)) {
+        if (applicationPaymentRepository.existsByApplicationIdAndStatusIn(applicationId,
+                List.of(
+                        PaymentStatus.PENDING,
+                        PaymentStatus.SUCCEEDED
+                )
+        )) {
             throw new PaymentAlreadyInitiatedException("Payment already initiated for this application.");
         }
 

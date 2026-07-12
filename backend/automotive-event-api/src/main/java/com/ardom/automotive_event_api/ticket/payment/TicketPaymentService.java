@@ -121,6 +121,16 @@ public class TicketPaymentService {
         );
     }
 
+    @Transactional
+    public void handleFailedCheckout(Long referenceId) {
+        TicketPayment payment = ticketPaymentRepository.findById(referenceId)
+                .orElseThrow(() -> new TicketPaymentNotFoundException("Ticket payment with id " + referenceId + " is not found"));
+
+        if (!payment.getStatus().equals(PaymentStatus.FAILED)) {
+            payment.setStatus(PaymentStatus.FAILED);
+        }
+    }
+
     private Event getValidEvent(Long eventId, int amountToPurchase) {
         Event event = eventRepository.findByIdAndStatus(eventId, EventStatus.PUBLISHED)
                 .orElseThrow(() -> new EventNotFoundException("Event with id " + eventId + " is not found"));
