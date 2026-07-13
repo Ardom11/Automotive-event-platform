@@ -180,7 +180,7 @@ class ApplicationServiceTest {
 
             // then
             assertThat(application.getRejectionReason()).isNull();
-            assertThat(application.getFee()).isEqualByComparingTo(BigDecimal.valueOf(50));
+            assertThat(application.getFee()).isNull();
             assertThat(response.cars()).hasSize(1);
             verify(applicationRepository).save(application);
         }
@@ -354,6 +354,7 @@ class ApplicationServiceTest {
             Application saved = captor.getValue();
             assertThat(saved.getStatus()).isEqualTo(ApplicationStatus.PENDING);
             assertThat(saved.getRejectionReason()).isNull();
+            assertThat(saved.getFee()).isNotNull();
             assertThat(response.id()).isEqualTo(application.getId());
             assertThat(response.eventName()).isEqualTo(application.getEvent().getName());
         }

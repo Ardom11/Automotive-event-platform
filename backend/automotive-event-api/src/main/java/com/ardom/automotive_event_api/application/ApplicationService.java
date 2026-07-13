@@ -123,11 +123,6 @@ public class ApplicationService {
                 .toList();
         carPhotoRepository.saveAll(newPhotos);
 
-        int totalCars = existingCarCount + savedCars.size();
-        BigDecimal fee = application.getEvent().getApplicationFee()
-                .multiply(BigDecimal.valueOf(totalCars));
-        application.setFee(fee);
-
         applicationRepository.save(application);
 
         return getApplication(authentication, id);
@@ -159,6 +154,9 @@ public class ApplicationService {
             throw new ApplicationNotSubmittableException("The application can no longer be submitted (must be submitted at least 2 weeks before event)");
         }
 
+        BigDecimal fee = application.getEvent().getApplicationFee()
+                .multiply(BigDecimal.valueOf(carRepository.countByApplicationId(id)));
+        application.setFee(fee);
         application.setStatus(ApplicationStatus.PENDING);
         application.setRejectionReason(null);
 
