@@ -42,6 +42,8 @@ application:
     jwt:
       secret: ${SECRET_KEY}
       expiration: 3600000
+  storage:
+    max-file-size-bytes: 5242880
   base-url: http://localhost:8080
 aws:
   s3:

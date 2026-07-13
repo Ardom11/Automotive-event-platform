@@ -4,6 +4,7 @@ import jakarta.validation.constraints.NotBlank;
 
 public record PresignedUploadRequest(
         @NotBlank String filename,
-        @NotBlank String contentType
+        @NotBlank String contentType,
+        @NotBlank Integer filesize
 ) {
 }

@@ -30,7 +30,7 @@ public class FileStorageController {
         }
 
         return ResponseEntity.ok(
-                fileStorageService.generateUploadUrl(user.getId(), request.filename(), request.contentType())
+                fileStorageService.generateUploadUrl(user.getId(), request)
         );
     }
 

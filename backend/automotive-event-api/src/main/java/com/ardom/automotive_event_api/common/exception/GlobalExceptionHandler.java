@@ -9,6 +9,7 @@ import com.ardom.automotive_event_api.common.dto.response.ErrorResponse;
 import com.ardom.automotive_event_api.event.exception.*;
 import com.ardom.automotive_event_api.payment.exception.PaymentAlreadyInitiatedException;
 import com.ardom.automotive_event_api.payment.exception.WebhookException;
+import com.ardom.automotive_event_api.storage.exception.FileTooBigException;
 import com.ardom.automotive_event_api.storage.exception.UnsupportedFiletypeException;
 import com.ardom.automotive_event_api.ticket.exception.TicketNotFoundException;
 import com.ardom.automotive_event_api.user.exception.UserNotFoundException;
@@ -172,6 +173,11 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(TicketNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleTicketNotFoundException(TicketNotFoundException e) {
         return buildResponse(HttpStatus.NOT_FOUND, e.getMessage());
+    }
+
+    @ExceptionHandler(FileTooBigException.class)
+    public ResponseEntity<ErrorResponse> handleFileTooLargeException(FileTooBigException e){
+        return buildResponse(HttpStatus.BAD_REQUEST, e.getMessage());
     }
 
     @ExceptionHandler(IllegalArgumentException.class)

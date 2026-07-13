@@ -1,7 +1,9 @@
 package com.ardom.automotive_event_api.storage;
 
+import com.ardom.automotive_event_api.storage.dto.request.PresignedUploadRequest;
 import com.ardom.automotive_event_api.storage.dto.response.PresignedDownloadResponse;
 import com.ardom.automotive_event_api.storage.dto.response.PresignedUploadResponse;
+import com.ardom.automotive_event_api.storage.exception.FileTooBigException;
 import com.ardom.automotive_event_api.storage.exception.UnsupportedFiletypeException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -49,12 +51,15 @@ class S3FileStorageServiceTest {
 
     private static final String BUCKET_NAME = "test-bucket";
     private static final int EXPIRATION_MINUTES = 5;
+    private static final int MAX_FILESIZE = 5242880;
+    private static final int VALID_FILESIZE = 1048576;
 
     @BeforeEach
     void setUp() {
         s3FileStorageService = new S3FileStorageService(s3Client, s3Presigner);
         ReflectionTestUtils.setField(s3FileStorageService, "bucketName", BUCKET_NAME);
         ReflectionTestUtils.setField(s3FileStorageService, "expirationMinutes", EXPIRATION_MINUTES);
+        ReflectionTestUtils.setField(s3FileStorageService, "MAX_FILE_SIZE", MAX_FILESIZE);
     }
 
     private URL fakeUrl(String value) {
@@ -78,11 +83,10 @@ class S3FileStorageServiceTest {
         void generateUploadUrl_shouldThrowUnsupportedFiletypeException_whenContentTypeNotAllowed() {
             // given
             Long userId = 1L;
-            String filename = "video.mp4";
-            String contentType = "video/mp4";
+            PresignedUploadRequest request = new PresignedUploadRequest("video.mp4", "video/mp4", VALID_FILESIZE);
 
             // when / then
-            assertThatThrownBy(() -> s3FileStorageService.generateUploadUrl(userId, filename, contentType))
+            assertThatThrownBy(() -> s3FileStorageService.generateUploadUrl(userId, request))
                     .isInstanceOf(UnsupportedFiletypeException.class);
 
             verifyNoInteractions(s3Presigner);
@@ -93,11 +97,10 @@ class S3FileStorageServiceTest {
         void generateUploadUrl_shouldThrowIllegalArgumentException_whenFilenameHasNoExtension() {
             // given
             Long userId = 1L;
-            String filename = "photo_without_extension";
-            String contentType = "image/jpeg";
+            PresignedUploadRequest request = new PresignedUploadRequest("photo_without_extension", "image/jpeg", VALID_FILESIZE);
 
             // when / then
-            assertThatThrownBy(() -> s3FileStorageService.generateUploadUrl(userId, filename, contentType))
+            assertThatThrownBy(() -> s3FileStorageService.generateUploadUrl(userId, request))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining("File has no extension");
 
@@ -109,13 +112,27 @@ class S3FileStorageServiceTest {
         void generateUploadUrl_shouldThrowIllegalArgumentException_whenExtensionDoesNotMatchContentType() {
             // given
             Long userId = 1L;
-            String filename = "photo.png";
-            String contentType = "image/jpeg";
+            PresignedUploadRequest request = new PresignedUploadRequest("photo.png", "image/jpeg", VALID_FILESIZE);
 
             // when / then
-            assertThatThrownBy(() -> s3FileStorageService.generateUploadUrl(userId, filename, contentType))
+            assertThatThrownBy(() -> s3FileStorageService.generateUploadUrl(userId, request))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining("not supported");
+
+            verifyNoInteractions(s3Presigner);
+        }
+
+        @Test
+        @DisplayName("Should throw FileTooBigException when size is too big")
+        void generateUploadUrl_shouldThrowFileTooBigException_whenFileSizeTooBig() {
+            // given
+            Long userId = 1L;
+            PresignedUploadRequest request = new PresignedUploadRequest("photo.png", "image/jpeg", (VALID_FILESIZE * 100));
+
+            // when / then
+            assertThatThrownBy(() -> s3FileStorageService.generateUploadUrl(userId, request))
+                    .isInstanceOf(FileTooBigException.class)
+                    .hasMessageContaining("too big");
 
             verifyNoInteractions(s3Presigner);
         }
@@ -125,8 +142,7 @@ class S3FileStorageServiceTest {
         void generateUploadUrl_shouldGeneratePresignedUploadResponse_whenFileIsValidJpeg() {
             // given
             Long userId = 42L;
-            String filename = "car-photo.jpg";
-            String contentType = "image/jpeg";
+            PresignedUploadRequest request = new PresignedUploadRequest("car-photo.jpg", "image/jpeg", VALID_FILESIZE);
 
             when(presignedPutObjectRequest.url()).thenReturn(fakeUrl("https://s3.example.com/upload"));
             when(s3Presigner.presignPutObject(any(PutObjectPresignRequest.class)))
@@ -134,7 +150,7 @@ class S3FileStorageServiceTest {
 
             // when
             PresignedUploadResponse response =
-                    s3FileStorageService.generateUploadUrl(userId, filename, contentType);
+                    s3FileStorageService.generateUploadUrl(userId, request);
 
             // then
             assertThat(response.uploadUrl()).isEqualTo("https://s3.example.com/upload");
@@ -148,8 +164,7 @@ class S3FileStorageServiceTest {
         void generateUploadUrl_shouldBuildPresignRequestWithCorrectBucketKeyAndContentType_whenFileIsValid() {
             // given
             Long userId = 7L;
-            String filename = "car.png";
-            String contentType = "image/png";
+            PresignedUploadRequest request = new PresignedUploadRequest("car.png", "image/png", VALID_FILESIZE);
 
             when(presignedPutObjectRequest.url()).thenReturn(fakeUrl("https://s3.example.com/upload"));
             when(s3Presigner.presignPutObject(any(PutObjectPresignRequest.class)))
@@ -159,7 +174,7 @@ class S3FileStorageServiceTest {
                     ArgumentCaptor.forClass(PutObjectPresignRequest.class);
 
             // when
-            s3FileStorageService.generateUploadUrl(userId, filename, contentType);
+            s3FileStorageService.generateUploadUrl(userId, request);
 
             // then
             verify(s3Presigner).presignPutObject(captor.capture());
@@ -168,7 +183,7 @@ class S3FileStorageServiceTest {
             assertThat(capturedObjectRequest.bucket()).isEqualTo(BUCKET_NAME);
             assertThat(capturedObjectRequest.key()).startsWith("photos/7/");
             assertThat(capturedObjectRequest.key()).endsWith(".png");
-            assertThat(capturedObjectRequest.contentType()).isEqualTo(contentType);
+            assertThat(capturedObjectRequest.contentType()).isEqualTo(request.contentType());
         }
 
         @Test
@@ -176,16 +191,15 @@ class S3FileStorageServiceTest {
         void generateUploadUrl_shouldGenerateUniqueKeys_whenCalledMultipleTimes() {
             // given
             Long userId = 1L;
-            String filename = "photo.webp";
-            String contentType = "image/webp";
+            PresignedUploadRequest request = new PresignedUploadRequest("photo.webp", "image/webp", VALID_FILESIZE);
 
             when(presignedPutObjectRequest.url()).thenReturn(fakeUrl("https://s3.example.com/upload"));
             when(s3Presigner.presignPutObject(any(PutObjectPresignRequest.class)))
                     .thenReturn(presignedPutObjectRequest);
 
             // when
-            PresignedUploadResponse first = s3FileStorageService.generateUploadUrl(userId, filename, contentType);
-            PresignedUploadResponse second = s3FileStorageService.generateUploadUrl(userId, filename, contentType);
+            PresignedUploadResponse first = s3FileStorageService.generateUploadUrl(userId, request);
+            PresignedUploadResponse second = s3FileStorageService.generateUploadUrl(userId, request);
 
             // then
             assertThat(first.key()).isNotEqualTo(second.key());

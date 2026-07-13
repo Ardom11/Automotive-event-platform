@@ -1,7 +1,9 @@
 package com.ardom.automotive_event_api.storage;
 
+import com.ardom.automotive_event_api.storage.dto.request.PresignedUploadRequest;
 import com.ardom.automotive_event_api.storage.dto.response.PresignedDownloadResponse;
 import com.ardom.automotive_event_api.storage.dto.response.PresignedUploadResponse;
+import com.ardom.automotive_event_api.storage.exception.FileTooBigException;
 import com.ardom.automotive_event_api.storage.exception.UnsupportedFiletypeException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -36,6 +38,9 @@ public class S3FileStorageService implements FileStorageService {
     @Value("${aws.s3.presigned-url-expiration-minutes}")
     private int expirationMinutes;
 
+    @Value("${application.storage.max-file-size-bytes}")
+    private static int MAX_FILE_SIZE;
+
     private static final Map<String, Set<String>> ALLOWED_EXTENSIONS = Map.of(
             "image/jpeg", Set.of(".jpg", ".jpeg", ".jpe", ".jfif"),
             "image/png", Set.of(".png"),
@@ -43,17 +48,21 @@ public class S3FileStorageService implements FileStorageService {
     );
 
     @Override
-    public PresignedUploadResponse generateUploadUrl(Long userId, String originalFilename, String contentType) {
-        if (!ALLOWED_EXTENSIONS.containsKey(contentType)) {
-            throw new UnsupportedFiletypeException("Unsupported content type: " + contentType);
+    public PresignedUploadResponse generateUploadUrl(Long userId, PresignedUploadRequest request) {
+        if (!ALLOWED_EXTENSIONS.containsKey(request.contentType())) {
+            throw new UnsupportedFiletypeException("Unsupported content type: " + request.contentType());
         }
 
-        String key = buildKey(userId, originalFilename, contentType);
+        if (request.filesize() > MAX_FILE_SIZE) {
+            throw new FileTooBigException("The file is too big. Max size is " + (MAX_FILE_SIZE / 1024 / 1024));
+        }
+
+        String key = buildKey(userId, request.filename(), request.contentType());
 
         PutObjectRequest objectRequest = PutObjectRequest.builder()
                 .bucket(bucketName)
                 .key(key)
-                .contentType(contentType)
+                .contentType(request.contentType())
                 .build();
 
         Duration expiration = Duration.ofMinutes(expirationMinutes);
