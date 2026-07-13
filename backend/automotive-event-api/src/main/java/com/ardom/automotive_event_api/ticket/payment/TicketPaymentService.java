@@ -23,6 +23,7 @@ import com.stripe.param.checkout.SessionCreateParams;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -42,7 +43,9 @@ public class TicketPaymentService {
     private final EmailService emailService;
 
     @Transactional
-    public CheckoutResponse initiateCheckout(TicketPurchaseRequest request, User user) throws StripeException {
+    public CheckoutResponse initiateCheckout(Authentication authentication, TicketPurchaseRequest request) throws StripeException {
+        User user = (User) authentication.getPrincipal();
+
         Event event = getValidEvent(request.eventId(), request.quantity());
 
         TicketPayment payment = TicketPayment.builder()

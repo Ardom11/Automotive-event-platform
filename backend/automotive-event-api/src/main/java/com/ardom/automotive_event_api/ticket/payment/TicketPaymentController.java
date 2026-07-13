@@ -3,7 +3,6 @@ package com.ardom.automotive_event_api.ticket.payment;
 import com.ardom.automotive_event_api.payment.dto.response.CheckoutResponse;
 import com.ardom.automotive_event_api.ticket.dto.request.TicketPurchaseGuestRequest;
 import com.ardom.automotive_event_api.ticket.dto.request.TicketPurchaseRequest;
-import com.ardom.automotive_event_api.user.User;
 import com.stripe.exception.StripeException;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -25,8 +24,7 @@ public class TicketPaymentController {
     @PreAuthorize("hasRole('USER')")
     public ResponseEntity<CheckoutResponse> purchaseAsUser(Authentication authentication,
                                                            @Valid @RequestBody TicketPurchaseRequest request) throws StripeException {
-        User user = (User) authentication.getPrincipal();
-        return ResponseEntity.ok(service.initiateCheckout(request, user));
+        return ResponseEntity.ok(service.initiateCheckout(authentication, request));
     }
 
     @PostMapping("/guest-checkout")

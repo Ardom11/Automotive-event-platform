@@ -1,7 +1,6 @@
 package com.ardom.automotive_event_api.application.payment;
 
 import com.ardom.automotive_event_api.payment.dto.response.CheckoutResponse;
-import com.ardom.automotive_event_api.user.User;
 import com.stripe.exception.StripeException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -22,7 +21,6 @@ public class ApplicationPaymentController {
     @PreAuthorize("hasRole('USER')")
     public ResponseEntity<CheckoutResponse> payForApplication(@PathVariable Long id,
                                                               Authentication authentication) throws StripeException {
-        User user = (User) authentication.getPrincipal();
-        return ResponseEntity.ok(service.initiateCheckout(id, user));
+        return ResponseEntity.ok(service.initiateCheckout(authentication, id));
     }
 }

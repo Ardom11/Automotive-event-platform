@@ -16,6 +16,7 @@ import com.stripe.param.checkout.SessionCreateParams;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -33,7 +34,9 @@ public class ApplicationPaymentService {
     private final EmailService emailService;
 
     @Transactional
-    public CheckoutResponse initiateCheckout(Long applicationId, User user) throws StripeException {
+    public CheckoutResponse initiateCheckout(Authentication authentication, Long applicationId) throws StripeException {
+        User user = (User) authentication.getPrincipal();
+
         Application application = getValidApplication(applicationId, user);
 
         ApplicationPayment payment = ApplicationPayment.builder()
@@ -76,7 +79,7 @@ public class ApplicationPaymentService {
     @Transactional
     public void handleFailedCheckout(Long referenceId) {
         ApplicationPayment payment = applicationPaymentRepository.findById(referenceId)
-                .orElseThrow(() -> new ApplicationNotFoundException("Application payment with id " + referenceId + " is not found"));
+                .orElseThrow(() -> new ApplicationPaymentNotFoundException("Application payment with id " + referenceId + " is not found"));
 
         if (!payment.getStatus().equals(PaymentStatus.FAILED)) {
             payment.setStatus(PaymentStatus.FAILED);

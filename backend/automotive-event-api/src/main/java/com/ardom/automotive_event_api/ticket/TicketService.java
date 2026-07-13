@@ -18,7 +18,7 @@ public class TicketService {
     private final TicketMapper ticketMapper;
     private final PdfService pdfService;
 
-    public Page<TicketSummaryResponse> getUserTickets(Authentication authentication, Pageable pageable){
+    public Page<TicketSummaryResponse> getUserTickets(Authentication authentication, Pageable pageable) {
         User user = (User) authentication.getPrincipal();
         if (user == null) {
             throw new UserNotFoundException("User not found");
@@ -36,7 +36,7 @@ public class TicketService {
         }
 
         Ticket ticket = ticketRepository.findByIdAndUserId(id, user.getId());
-        if(ticket == null){
+        if (ticket == null) {
             throw new TicketNotFoundException("Ticket with id " + id + " is not found");
         }
 

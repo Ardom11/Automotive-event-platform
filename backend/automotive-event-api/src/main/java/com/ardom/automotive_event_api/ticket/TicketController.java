@@ -29,7 +29,7 @@ public class TicketController {
 
     @GetMapping("/{id}/pdf")
     public ResponseEntity<byte[]> getTicketPdf(Authentication authentication,
-                                                              @PathVariable Long id) {
+                                               @PathVariable Long id) {
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_PDF)
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=ticket.pdf")
                 .body(ticketService.getTicketPdf(authentication, id));
