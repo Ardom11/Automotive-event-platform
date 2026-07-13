@@ -29,6 +29,9 @@ public class ApplicationPaymentService {
     @Value("${application.base-url}")
     private String baseUrl;
 
+    @Value("${stripe.currency}")
+    private String currency;
+
     private final ApplicationPaymentRepository applicationPaymentRepository;
     private final ApplicationRepository applicationRepository;
     private final EmailService emailService;
@@ -113,7 +116,7 @@ public class ApplicationPaymentService {
                 .addLineItem(SessionCreateParams.LineItem.builder()
                         .setQuantity(1L)
                         .setPriceData(SessionCreateParams.LineItem.PriceData.builder()
-                                .setCurrency("eur")
+                                .setCurrency(currency)
                                 .setUnitAmount(application.getFee().multiply(BigDecimal.valueOf(100)).longValueExact())
                                 .setProductData(SessionCreateParams.LineItem.PriceData.ProductData.builder()
                                         .setName("Application fee — " + application.getEvent().getName())

@@ -26,12 +26,14 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.Authentication;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -85,6 +87,8 @@ class ApplicationServiceTest {
                 carMapper,
                 emailService
         );
+
+        ReflectionTestUtils.setField(applicationService, "maxCars", 5);
 
         user = User.builder().id(1L).name("John").surname("Doe").email("john@example.com").role(Role.USER).build();
         event = Event.builder().id(10L).name("Spring Show").status(EventStatus.PUBLISHED).applicationFee(BigDecimal.valueOf(50)).dateStart(LocalDateTime.now().plusMonths(1)).build();

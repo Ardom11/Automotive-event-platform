@@ -66,7 +66,7 @@ public class Event {
 
     @Transient
     public LocalDate getApplicationDeadline() {
-        return dateStart.toLocalDate().minusWeeks(2);
+        return dateStart.toLocalDate().minusDays(14);
     }
 
     @Transient

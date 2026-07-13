@@ -37,6 +37,7 @@ spring:
 stripe:
   secret-key: ${STRIPE_SECRET_KEY}
   webhook-secret: ${STRIPE_WEBHOOK_SECRET}
+  currency: eur
 application:
   security:
     jwt:
@@ -45,6 +46,9 @@ application:
   storage:
     max-file-size-bytes: 5242880
   base-url: http://localhost:8080
+  expiration:
+    unpaid-expiration-days-before-event: 7
+  max-cars-per-application: 5
 aws:
   s3:
     bucket-name: automotive-event-api-dev

@@ -16,6 +16,7 @@ import com.ardom.automotive_event_api.user.User;
 import com.ardom.automotive_event_api.user.exception.UserNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.Authentication;
@@ -31,6 +32,8 @@ import java.util.stream.IntStream;
 @Service
 @RequiredArgsConstructor
 public class ApplicationService {
+    @Value("${application.max-cars-per-application}")
+    private Integer maxCars;
 
     private final ApplicationRepository applicationRepository;
     private final CarRepository carRepository;
@@ -93,7 +96,7 @@ public class ApplicationService {
         int existingCarCount = carRepository.countByApplicationId(id);
         List<CarDto> carDtos = request.cars();
 
-        if (existingCarCount + carDtos.size() > 5) {
+        if (existingCarCount + carDtos.size() > maxCars) {
             throw new TooManyCarsException(
                     "Application already has " + existingCarCount + " car(s); cannot add "
                             + carDtos.size() + " more (max 5 total)");

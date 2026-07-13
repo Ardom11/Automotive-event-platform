@@ -9,6 +9,7 @@ import com.ardom.automotive_event_api.user.User;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.io.ByteArrayResource;
@@ -22,10 +23,9 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 
 @Service
+@Slf4j
 @RequiredArgsConstructor
 public class EmailService {
-    private static final Logger log = LoggerFactory.getLogger(EmailService.class);
-
     private final JavaMailSender mailSender;
     private final PdfService pdfService;
     private final ApplicationPaymentRepository applicationPaymentRepository;
