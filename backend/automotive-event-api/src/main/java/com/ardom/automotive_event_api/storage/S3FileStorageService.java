@@ -39,7 +39,7 @@ public class S3FileStorageService implements FileStorageService {
     private int expirationMinutes;
 
     @Value("${application.storage.max-file-size-bytes}")
-    private static int MAX_FILE_SIZE;
+    private int MAX_FILE_SIZE;
 
     private static final Map<String, Set<String>> ALLOWED_EXTENSIONS = Map.of(
             "image/jpeg", Set.of(".jpg", ".jpeg", ".jpe", ".jfif"),

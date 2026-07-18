@@ -1,0 +1,928 @@
+{
+  "info": {
+    "_postman_id": "e00c4b16-427a-4e98-8a48-c7e045e89e21",
+    "name": "AutomotiveEventAPI",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "52765286",
+    "_collection_link": "https://go.postman.co/collection/52765286-e00c4b16-427a-4e98-8a48-c7e045e89e21?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "/auth",
+      "item": [
+        {
+          "name": "Register",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"name\": \"Test\",\r\n    \"surname\": \"Test\",\r\n    \"email\": \"Test@gmail.com\",\r\n    \"password\": \"Test\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{register}}",
+              "host": [
+                "{{register}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"email\": \"Test@gmail.com\",\r\n    \"password\": \"Test\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{login}}",
+              "host": [
+                "{{login}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Refresh token",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{refresh token}}",
+              "host": [
+                "{{refresh token}}"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "/users",
+      "item": [
+        {
+          "name": "Get current user",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{current user}}",
+              "host": [
+                "{{current user}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update current user",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"name\": \"example\",\r\n    \"surname\": \"example\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{current user}}",
+              "host": [
+                "{{current user}}"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "/events",
+      "item": [
+        {
+          "name": "Get all events",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{events}}",
+              "host": [
+                "{{events}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get event",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{events}}/id",
+              "host": [
+                "{{events}}"
+              ],
+              "path": [
+                "id"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "/applications",
+      "item": [
+        {
+          "name": "Create application",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"eventId\": \r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{applications}}",
+              "host": [
+                "{{applications}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update application",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"cars\":[\r\n        {\r\n            \"brand\": ,\r\n            \"model\": ,\r\n            \"year\": ,\r\n            \"story\": ,\r\n            \"photoKeys\": [\r\n                \"photo-keys-previously-got-from-storage-endpoints\",\r\n                \"key-blueprint: photos/{userId}/uuid.extension\"\r\n            ]\r\n        }\r\n    ]\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{applications}}/applicationId",
+              "host": [
+                "{{applications}}"
+              ],
+              "path": [
+                "applicationId"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Submit application",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": ""
+            },
+            "url": {
+              "raw": "{{applications}}/id/submit",
+              "host": [
+                "{{applications}}"
+              ],
+              "path": [
+                "id",
+                "submit"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get all user applications",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{applications}}",
+              "host": [
+                "{{applications}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get user application",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{applications}}/id",
+              "host": [
+                "{{applications}}"
+              ],
+              "path": [
+                "id"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete application",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{applications}}/applicationId",
+              "host": [
+                "{{applications}}"
+              ],
+              "path": [
+                "applicationId"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Pay for application",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{applications}}/applicationId/payment",
+              "host": [
+                "{{applications}}"
+              ],
+              "path": [
+                "applicationId",
+                "payment"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "/tickets",
+      "item": [
+        {
+          "name": "Buy ticket as authorized user",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"eventId\": ,\r\n    \"quantity\":\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{tickets}}/checkout",
+              "host": [
+                "{{tickets}}"
+              ],
+              "path": [
+                "checkout"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Buy ticket as a guest",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"eventId\": ,\r\n    \"quantity\": ,\r\n    \"guestName\": ,\r\n    \"guestSurname\": ,\r\n    \"guestEmail\": \r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{tickets}}/guest-checkout",
+              "host": [
+                "{{tickets}}"
+              ],
+              "path": [
+                "guest-checkout"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get all user tickets",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{tickets}}",
+              "host": [
+                "{{tickets}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get ticket pdf",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{tickets}}/id/pdf",
+              "host": [
+                "{{tickets}}"
+              ],
+              "path": [
+                "id",
+                "pdf"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "/admin/events",
+      "item": [
+        {
+          "name": "Create event",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"name\": \"Test New event\",\r\n    \"description\": \"Testing functionality of events entities etc.\",\r\n    \"place\": \"Some stadium somewhere\",\r\n    \"address\": \"Imagination street 3, 49\",\r\n    \"city\": \"Nonexistovile\",\r\n    \"country\": \"Imaginarium\",\r\n    \"dateStart\": \"2026-06-26T10:00:00\",\r\n    \"dateEnd\": \"2026-06-28T22:00:00\",\r\n    \"ticketsCapacity\": 3000,\r\n    \"ticketPrice\": 55.00,\r\n    \"applicationFee\": 110.00\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{admin events}}",
+              "host": [
+                "{{admin events}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get all events",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{admin events}}",
+              "host": [
+                "{{admin events}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get event",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{admin events}}/id",
+              "host": [
+                "{{admin events}}"
+              ],
+              "path": [
+                "id"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update event",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "// All fields are optional\r\n{\r\n    \"name\": \"Test New event\",\r\n    \"description\": \"Testing functionality of events entities etc.\",\r\n    \"place\": \"Some stadium somewhere\",\r\n    \"address\": \"Imagination street 3, 49\",\r\n    \"city\": \"Nonexistovile\",\r\n    \"country\": \"Imaginarium\",\r\n    \"dateStart\": \"2026-06-26T10:00:00\",\r\n    \"dateEnd\": \"2026-06-28T22:00:00\",\r\n    \"ticketsCapacity\": 3000,\r\n    \"ticketPrice\": 55.00,\r\n    \"applicationFee\": 110.00\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{admin events}}/id",
+              "host": [
+                "{{admin events}}"
+              ],
+              "path": [
+                "id"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update event status",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "// Target status. Valid transitions:\r\n// - `DRAFT` → `PUBLISHED`\r\n// - `PUBLISHED` → `UNPUBLISHED`, `ARCHIVED`\r\n// - `UNPUBLISHED` → `PUBLISHED`, `ARCHIVED`\r\n// - `ARCHIVED` → no transitions allowed                \r\n{\r\n    \"status\":\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{admin events}}/id/status",
+              "host": [
+                "{{admin events}}"
+              ],
+              "path": [
+                "id",
+                "status"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete event",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{admin events}}/id",
+              "host": [
+                "{{admin events}}"
+              ],
+              "path": [
+                "id"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "/admin/appplications",
+      "item": [
+        {
+          "name": "Get all applications",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{admin applications}}",
+              "host": [
+                "{{admin applications}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get application",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{admin applications}}/applicationId",
+              "host": [
+                "{{admin applications}}"
+              ],
+              "path": [
+                "applicationId"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Approve application",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{admin applications}}/applicationId/approve",
+              "host": [
+                "{{admin applications}}"
+              ],
+              "path": [
+                "applicationId",
+                "approve"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Reject application",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "// Optional\r\n{\r\n    \"rejectionReason\":\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{admin applications}}/applicationId/reject",
+              "host": [
+                "{{admin applications}}"
+              ],
+              "path": [
+                "applicationId",
+                "reject"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "/storage",
+      "item": [
+        {
+          "name": "Upload url",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"filename\": ,\r\n    \"contentType\": ,\r\n    \"filesize\": \r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base url}}/storage/upload-url",
+              "host": [
+                "{{base url}}"
+              ],
+              "path": [
+                "storage",
+                "upload-url"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Download url",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base url}}/storage/download-url?key=",
+              "host": [
+                "{{base url}}"
+              ],
+              "path": [
+                "storage",
+                "download-url"
+              ],
+              "query": [
+                {
+                  "key": "key",
+                  "value": ""
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete photo",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base url}}/storage/delete?key=",
+              "host": [
+                "{{base url}}"
+              ],
+              "path": [
+                "storage",
+                "delete"
+              ],
+              "query": [
+                {
+                  "key": "key",
+                  "value": ""
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}
