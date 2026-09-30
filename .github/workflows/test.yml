@@ -19,4 +19,4 @@ jobs:
           cache: maven
 
       - name: Build and test
-        run: mvn clean verify
+        run: cd backend/automotive-event-api && mvn clean verify
