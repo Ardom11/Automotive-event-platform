@@ -1,6 +1,9 @@
 package com.ardom.automotive_event_api.ticket;
 
+import com.ardom.automotive_event_api.common.notification.TicketData;
 import com.ardom.automotive_event_api.common.pdf.PdfService;
+import com.ardom.automotive_event_api.event.Event;
+import com.ardom.automotive_event_api.event.EventLocation;
 import com.ardom.automotive_event_api.ticket.dto.response.TicketSummaryResponse;
 import com.ardom.automotive_event_api.ticket.exception.TicketNotFoundException;
 import com.ardom.automotive_event_api.user.User;
@@ -40,6 +43,19 @@ public class TicketService {
             throw new TicketNotFoundException("Ticket with id " + id + " is not found");
         }
 
-        return pdfService.generateTicketPdf(ticket);
+        Event event = ticket.getEvent();
+        EventLocation location = event.getLocation();
+        return pdfService.generateTicketPdf(new TicketData(
+                ticket.getCode(),
+                user.getName(),
+                user.getSurname(),
+                event.getName(),
+                event.getDateStart(),
+                event.getDateEnd(),
+                location.getPlace(),
+                location.getCity(),
+                location.getCountry(),
+                location.getAddress()
+        ));
     }
 }

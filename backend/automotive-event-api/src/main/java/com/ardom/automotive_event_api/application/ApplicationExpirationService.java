@@ -1,6 +1,7 @@
 package com.ardom.automotive_event_api.application;
 
 import com.ardom.automotive_event_api.common.email.EmailService;
+import com.ardom.automotive_event_api.common.notification.ApplicationNotification;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -30,7 +31,14 @@ public class ApplicationExpirationService {
 
         toExpire.forEach(app -> {
             app.setStatus(ApplicationStatus.EXPIRED);
-            emailService.sendApplicationExpired(applicationRepository.save(app));
+            app = applicationRepository.save(app);
+            emailService.sendApplicationExpired(new ApplicationNotification(
+                    app.getId(),
+                    app.getUser().getEmail(),
+                    app.getEvent().getName(),
+                    app.getEvent().getPaymentDeadline(),
+                    app.getRejectionReason()
+            ));
         });
     }
 }

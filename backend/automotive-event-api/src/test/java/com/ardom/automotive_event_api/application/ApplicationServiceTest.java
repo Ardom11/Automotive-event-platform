@@ -26,7 +26,6 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.PageImpl;
@@ -347,6 +346,8 @@ class ApplicationServiceTest {
             when(applicationRepository.findById(application.getId())).thenReturn(Optional.of(application));
             when(authentication.getPrincipal()).thenReturn(user);
             when(carRepository.countByApplicationId(application.getId())).thenReturn(1);
+            when(applicationRepository.save(any(Application.class)))
+                    .thenAnswer(invocation -> invocation.getArgument(0));
 
             // when
             ApplicationResponse response = applicationService.submitApplication(authentication, application.getId());
@@ -668,6 +669,8 @@ class ApplicationServiceTest {
             Application application = getApplication();
             application.setStatus(ApplicationStatus.PENDING);
             when(applicationRepository.findById(application.getId())).thenReturn(Optional.of(application));
+            when(applicationRepository.save(any(Application.class)))
+                    .thenAnswer(invocation -> invocation.getArgument(0));
 
             // when
             AdminApplicationResponse response = applicationService.approveApplication(application.getId());
@@ -703,6 +706,8 @@ class ApplicationServiceTest {
             Application application = getApplication();
             application.setStatus(ApplicationStatus.PENDING);
             when(applicationRepository.findById(application.getId())).thenReturn(Optional.of(application));
+            when(applicationRepository.save(any(Application.class)))
+                    .thenAnswer(invocation -> invocation.getArgument(0));
 
             // when
             AdminApplicationResponse response = applicationService.rejectApplication(application.getId(), new RejectApplicationRequest(""));
@@ -719,6 +724,8 @@ class ApplicationServiceTest {
             Application application = getApplication();
             application.setStatus(ApplicationStatus.PENDING);
             when(applicationRepository.findById(application.getId())).thenReturn(Optional.of(application));
+            when(applicationRepository.save(any(Application.class)))
+                    .thenAnswer(invocation -> invocation.getArgument(0));
 
             // when
             AdminApplicationResponse response = applicationService.rejectApplication(application.getId(), new RejectApplicationRequest("Rejection reason"));

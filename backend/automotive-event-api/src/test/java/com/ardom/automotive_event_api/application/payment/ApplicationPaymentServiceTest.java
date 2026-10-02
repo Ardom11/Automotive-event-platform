@@ -3,6 +3,7 @@ package com.ardom.automotive_event_api.application.payment;
 import com.ardom.automotive_event_api.application.Application;
 import com.ardom.automotive_event_api.application.ApplicationRepository;
 import com.ardom.automotive_event_api.application.ApplicationStatus;
+import com.ardom.automotive_event_api.application.car.CarRepository;
 import com.ardom.automotive_event_api.application.exception.ApplicationNotFoundException;
 import com.ardom.automotive_event_api.application.exception.ApplicationPaymentNotFoundException;
 import com.ardom.automotive_event_api.common.email.EmailService;
@@ -46,6 +47,8 @@ class ApplicationPaymentServiceTest {
     @Mock
     private ApplicationRepository applicationRepository;
     @Mock
+    private CarRepository carRepository;
+    @Mock
     private Authentication authentication;
     @Mock
     private EmailService emailService;
@@ -64,6 +67,8 @@ class ApplicationPaymentServiceTest {
         user = User.builder()
                 .id(1L)
                 .email("john@example.com")
+                .name("john")
+                .surname("doe")
                 .role(Role.USER)
                 .build();
 
@@ -249,13 +254,21 @@ class ApplicationPaymentServiceTest {
                     .build();
 
             when(applicationPaymentRepository.findById(10L)).thenReturn(Optional.of(payment));
+            when(carRepository.findAllByApplicationId(application.getId())).thenReturn(List.of());
 
             // When
             applicationPaymentService.handleSuccessfulCheckout(10L);
 
             // Then
-            verify(emailService).sendPaymentConfirmed(
-                    eq(application), eq(user), eq("AutoShow 2026"));
+            verify(emailService).sendPaymentConfirmed(argThat(n ->
+                    n.applicationId().equals(application.getId()) &&
+                            n.status() == ApplicationStatus.COMPLETED &&
+                            n.applicantEmail().equals(application.getUser().getEmail()) &&
+                            n.applicantName().equals(application.getUser().getName()) &&
+                            n.applicantSurname().equals(application.getUser().getSurname()) &&
+                            n.eventName().equals(application.getEvent().getName()) &&
+                            n.paymentData().amountPaid().compareTo(new BigDecimal("120.00")) == 0
+            ));
         }
 
         @Test
@@ -276,7 +289,7 @@ class ApplicationPaymentServiceTest {
             // Then
             // Application status should not be touched again
             assertThat(application.getStatus()).isEqualTo(ApplicationStatus.APPROVED_WAITING_PAYMENT);
-            verify(emailService, never()).sendPaymentConfirmed(any(), any(), any());
+            verify(emailService, never()).sendPaymentConfirmed(any());
         }
 
         @Test

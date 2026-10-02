@@ -1,6 +1,9 @@
 package com.ardom.automotive_event_api.ticket;
 
+import com.ardom.automotive_event_api.common.notification.TicketData;
 import com.ardom.automotive_event_api.common.pdf.PdfService;
+import com.ardom.automotive_event_api.event.Event;
+import com.ardom.automotive_event_api.event.EventLocation;
 import com.ardom.automotive_event_api.ticket.dto.response.TicketSummaryResponse;
 import com.ardom.automotive_event_api.ticket.exception.TicketNotFoundException;
 import com.ardom.automotive_event_api.user.Role;
@@ -21,6 +24,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.Authentication;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -50,6 +54,8 @@ class TicketServiceTest {
         user = User.builder()
                 .id(1L)
                 .email("john@example.com")
+                .name("john")
+                .surname("doe")
                 .role(Role.USER)
                 .build();
 
@@ -142,17 +148,44 @@ class TicketServiceTest {
         void getTicketPdf_shouldReturnPdfBytes_whenTicketBelongsToUser() {
             // Given
             byte[] pdfBytes = "pdf-content".getBytes();
+            Event event = Event.builder()
+                    .name("event")
+                    .dateStart(LocalDateTime.now().plusMonths(1))
+                    .dateEnd(LocalDateTime.now().plusMonths(1).plusDays(2))
+                    .location(new EventLocation(
+                            "place",
+                            "city",
+                            "country",
+                            "address",
+                            null,
+                            null
+                    ))
+                    .build();
+            TicketData ticketData = new TicketData(
+                    ticket.getCode(),
+                    user.getName(),
+                    user.getSurname(),
+                    event.getName(),
+                    event.getDateStart(),
+                    event.getDateEnd(),
+                    event.getLocation().getPlace(),
+                    event.getLocation().getCity(),
+                    event.getLocation().getCountry(),
+                    event.getLocation().getAddress()
+            );
 
+            ticket.setUser(user);
+            ticket.setEvent(event);
             when(authentication.getPrincipal()).thenReturn(user);
             when(ticketRepository.findByIdAndUserId(42L, 1L)).thenReturn(ticket);
-            when(pdfService.generateTicketPdf(ticket)).thenReturn(pdfBytes);
+            when(pdfService.generateTicketPdf(ticketData)).thenReturn(pdfBytes);
 
             // When
             byte[] result = ticketService.getTicketPdf(authentication, 42L);
 
             // Then
             assertThat(result).isEqualTo(pdfBytes);
-            verify(pdfService).generateTicketPdf(ticket);
+            verify(pdfService).generateTicketPdf(ticketData);
         }
 
         @Test

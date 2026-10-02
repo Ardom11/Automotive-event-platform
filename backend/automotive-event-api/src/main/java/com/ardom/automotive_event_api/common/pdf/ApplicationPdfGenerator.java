@@ -1,39 +1,22 @@
 package com.ardom.automotive_event_api.common.pdf;
 
-import com.ardom.automotive_event_api.application.Application;
-import com.ardom.automotive_event_api.application.car.Car;
-import com.ardom.automotive_event_api.application.payment.ApplicationPayment;
-import com.ardom.automotive_event_api.user.User;
+import com.ardom.automotive_event_api.common.notification.ApplicationPaymentNotification;
 import org.openpdf.text.*;
 import org.openpdf.text.pdf.PdfWriter;
 
 import java.io.ByteArrayOutputStream;
 import java.math.RoundingMode;
 import java.time.format.DateTimeFormatter;
-import java.util.List;
 
 public class ApplicationPdfGenerator {
 
-    private final ApplicationPayment payment;
-    private final Application application;
-    private final User user;
+    private final ApplicationPaymentNotification notification;
     private final Document document;
-    private final List<Car> cars;
-    private final String eventName;
 
-    public ApplicationPdfGenerator(
-            ApplicationPayment payment,
-            Application application,
-            User user,
-            List<Car> cars,
-            String eventName) {
+    public ApplicationPdfGenerator(ApplicationPaymentNotification notification) {
 
-        this.payment = payment;
-        this.application = application;
-        this.user = user;
+        this.notification = notification;
         this.document = new Document(PageSize.A4);
-        this.cars = cars;
-        this.eventName = eventName;
     }
 
     public byte[] generate() {
@@ -62,20 +45,20 @@ public class ApplicationPdfGenerator {
     }
 
     private void addApplicationDetails() {
-        document.add(new Paragraph(String.format("%s %s\n", user.getName(), user.getSurname())));
+        document.add(new Paragraph(String.format("%s %s\n", notification.applicantName(), notification.applicantSurname())));
         document.add(new Paragraph("Event & Application"));
-        document.add(new Paragraph("Event: " + eventName));
-        document.add(new Paragraph("Application ID: " + application.getId()));
-        document.add(new Paragraph("Status: " + application.getStatus()));
+        document.add(new Paragraph("Event: " + notification.eventName()));
+        document.add(new Paragraph("Application ID: " + notification.applicationId()));
+        document.add(new Paragraph("Status: " + notification.status()));
         document.add(new Paragraph("\n"));
     }
 
     private void addCarDetails() {
-        cars.forEach(car -> {
+        notification.cars().forEach(car -> {
             document.add(new Paragraph("Vehicle Details"));
-            document.add(new Paragraph("Brand: " + car.getBrand()));
-            document.add(new Paragraph("Model: " + car.getModel()));
-            document.add(new Paragraph("Year: " + car.getYear()));
+            document.add(new Paragraph("Brand: " + car.brand()));
+            document.add(new Paragraph("Model: " + car.model()));
+            document.add(new Paragraph("Year: " + car.year()));
             document.add(new Paragraph("\n"));
         });
     }
@@ -86,10 +69,10 @@ public class ApplicationPdfGenerator {
         document.add(title);
 
         document.add(new Paragraph("Amount Paid: €" +
-                payment.getAmountPaid().setScale(2, RoundingMode.HALF_UP)));
+                notification.paymentData().amountPaid().setScale(2, RoundingMode.HALF_UP)));
         document.add(new Paragraph("Payment Date: " +
-                payment.getPaidAt().format(DateTimeFormatter.ofPattern("dd MMM yyyy HH:mm:ss"))));
-        document.add(new Paragraph("Status: " + payment.getStatus()));
+                notification.paymentData().paidAt().format(DateTimeFormatter.ofPattern("dd MMM yyyy HH:mm:ss"))));
+        document.add(new Paragraph("Status: " + notification.paymentData().status()));
 
         document.add(new Paragraph("\n"));
         Paragraph footer = new Paragraph("Thank you for your participation!");

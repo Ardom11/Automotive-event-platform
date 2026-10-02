@@ -2,7 +2,10 @@ package com.ardom.automotive_event_api.ticket.payment;
 
 import com.ardom.automotive_event_api.application.exception.TicketPaymentNotFoundException;
 import com.ardom.automotive_event_api.common.email.EmailService;
+import com.ardom.automotive_event_api.common.notification.TicketData;
+import com.ardom.automotive_event_api.common.notification.TicketNotification;
 import com.ardom.automotive_event_api.event.Event;
+import com.ardom.automotive_event_api.event.EventLocation;
 import com.ardom.automotive_event_api.event.EventRepository;
 import com.ardom.automotive_event_api.event.EventStatus;
 import com.ardom.automotive_event_api.event.exception.EventNotFoundException;
@@ -90,6 +93,7 @@ public class TicketPaymentService {
         return new CheckoutResponse(session.getUrl());
     }
 
+    // TODO check that after refactoring ticketing system
     @Transactional
     public void handleSuccessfulCheckout(Long ticketPaymentId) {
         TicketPayment payment = ticketPaymentRepository.findById(ticketPaymentId)
@@ -117,11 +121,28 @@ public class TicketPaymentService {
         }
 
         ticketRepository.saveAll(tickets);
-        emailService.sendTicket(
-                tickets,
-                payment.getUser() != null ? payment.getUser().getEmail() : payment.getGuestEmail(),
-                payment.getEvent().getName()
-        );
+        List<TicketData> ticketsData = tickets.stream()
+                .map(t -> {
+                    User user = t.getUser();
+                    Event event = t.getEvent();
+                    EventLocation location = event.getLocation();
+                    return new TicketData(
+                            t.getCode(),
+                            user.getName(),
+                            user.getSurname(),
+                            event.getName(),
+                            event.getDateStart(),
+                            event.getDateEnd(),
+                            location.getPlace(),
+                            location.getCity(),
+                            location.getCountry(),
+                            location.getAddress()
+                    );
+                })
+                .toList();
+
+        String email = payment.getUser() != null ? payment.getUser().getEmail() : payment.getGuestEmail();
+        emailService.sendTicket(new TicketNotification(email, ticketsData));
     }
 
     @Transactional

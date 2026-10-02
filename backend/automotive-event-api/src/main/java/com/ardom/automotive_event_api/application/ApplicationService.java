@@ -8,6 +8,7 @@ import com.ardom.automotive_event_api.application.dto.request.UpdateApplicationR
 import com.ardom.automotive_event_api.application.dto.response.*;
 import com.ardom.automotive_event_api.application.exception.*;
 import com.ardom.automotive_event_api.common.email.EmailService;
+import com.ardom.automotive_event_api.common.notification.ApplicationNotification;
 import com.ardom.automotive_event_api.event.Event;
 import com.ardom.automotive_event_api.event.EventRepository;
 import com.ardom.automotive_event_api.event.EventStatus;
@@ -163,7 +164,15 @@ public class ApplicationService {
         application.setStatus(ApplicationStatus.PENDING);
         application.setRejectionReason(null);
 
-        emailService.sendApplicationReceived(applicationRepository.save(application));
+        application = applicationRepository.save(application);
+
+        emailService.sendApplicationReceived(new ApplicationNotification(
+                application.getId(),
+                application.getUser().getEmail(),
+                application.getEvent().getName(),
+                application.getEvent().getPaymentDeadline(),
+                application.getRejectionReason()
+        ));
 
         return getApplication(authentication, id);
     }
@@ -267,7 +276,15 @@ public class ApplicationService {
 
         application.setStatus(ApplicationStatus.APPROVED_WAITING_PAYMENT);
 
-        emailService.sendApplicationApproved(applicationRepository.save(application));
+        application = applicationRepository.save(application);
+
+        emailService.sendApplicationApproved(new ApplicationNotification(
+                application.getId(),
+                application.getUser().getEmail(),
+                application.getEvent().getName(),
+                application.getEvent().getPaymentDeadline(),
+                application.getRejectionReason()
+        ));
 
         return getApplicationForAdmin(id);
     }
@@ -285,7 +302,15 @@ public class ApplicationService {
             application.setRejectionReason(request.rejectionReason());
         }
 
-        emailService.sendApplicationRejected(applicationRepository.save(application));
+        application = applicationRepository.save(application);
+
+        emailService.sendApplicationRejected(new ApplicationNotification(
+                application.getId(),
+                application.getUser().getEmail(),
+                application.getEvent().getName(),
+                application.getEvent().getPaymentDeadline(),
+                application.getRejectionReason()
+        ));
 
         return getApplicationForAdmin(id);
     }
