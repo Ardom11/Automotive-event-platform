@@ -51,6 +51,8 @@ class TicketControllerTest {
     void setUp() {
         ticketSummaryResponse = new TicketSummaryResponse(
                 "AutoShow 2026",
+                "John",
+                "Doe",
                 "2026-09-01",
                 "ABC123DEF456",
                 TicketStatus.ACTIVE,

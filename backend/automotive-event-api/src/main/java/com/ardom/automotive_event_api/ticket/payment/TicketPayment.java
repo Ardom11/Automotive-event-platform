@@ -2,6 +2,7 @@ package com.ardom.automotive_event_api.ticket.payment;
 
 import com.ardom.automotive_event_api.event.Event;
 import com.ardom.automotive_event_api.payment.PaymentStatus;
+import com.ardom.automotive_event_api.ticket.TicketHolder;
 import com.ardom.automotive_event_api.user.User;
 import jakarta.persistence.*;
 import lombok.*;
@@ -11,6 +12,8 @@ import org.hibernate.type.SqlTypes;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "ticket_payments")
@@ -36,20 +39,17 @@ public class TicketPayment {
     @JoinColumn(name = "user_id")
     private User user;
 
-    @Column(name = "guest_name")
-    private String guestName;
-
-    @Column(name = "guest_surname")
-    private String guestSurname;
-
     @Column(name = "guest_email")
     private String guestEmail;
 
+    @ElementCollection
+    @CollectionTable(name = "ticket_payment_holders", joinColumns = @JoinColumn(name = "payment_id"))
+    @OrderColumn(name = "position")
+    @Builder.Default
+    private List<TicketHolder> ticketHolders = new ArrayList<>();
+
     @Column(name = "amount_paid", nullable = false, precision = 10, scale = 2)
     private BigDecimal amountPaid;
-
-    @Column(nullable = false)
-    private Integer quantity;
 
     @JdbcTypeCode(SqlTypes.NAMED_ENUM)
     @Column(nullable = false)
@@ -61,4 +61,8 @@ public class TicketPayment {
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
+
+    public int getQuantity() {
+        return ticketHolders.size();
+    }
 }

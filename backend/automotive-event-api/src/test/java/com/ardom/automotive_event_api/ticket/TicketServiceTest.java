@@ -62,6 +62,8 @@ class TicketServiceTest {
         ticket = Ticket.builder()
                 .id(42L)
                 .code("ABC123DEF456")
+                .name("john")
+                .surname("doe")
                 .status(TicketStatus.ACTIVE)
                 .price(new BigDecimal("55.00"))
                 .build();
@@ -82,8 +84,13 @@ class TicketServiceTest {
             Pageable pageable = PageRequest.of(0, 10);
 
             TicketSummaryResponse summaryResponse = new TicketSummaryResponse(
-                    "AutoShow 2026", "2026-09-01", "ABC123DEF456",
-                    TicketStatus.ACTIVE, new BigDecimal("55.00"), 42L);
+                    "AutoShow 2026",
+                    "John",
+                    "Doe",
+                    "2026-09-01",
+                    "ABC123DEF456",
+                    TicketStatus.ACTIVE,
+                    new BigDecimal("55.00"), 42L);
 
             Page<Ticket> ticketPage = new PageImpl<>(List.of(ticket), pageable, 1);
 
@@ -163,8 +170,8 @@ class TicketServiceTest {
                     .build();
             TicketData ticketData = new TicketData(
                     ticket.getCode(),
-                    user.getName(),
-                    user.getSurname(),
+                    ticket.getName(),
+                    ticket.getSurname(),
                     event.getName(),
                     event.getDateStart(),
                     event.getDateEnd(),

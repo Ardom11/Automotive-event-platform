@@ -37,8 +37,11 @@ public class Ticket {
     @JoinColumn(name = "user_id")
     private User user;
 
-    @Column(name = "guest_email")
-    private String guestEmail;
+    @Column(name = "name", nullable = false)
+    private String name;
+
+    @Column(name = "surname", nullable = false)
+    private String surname;
 
     @Column(name = "code", nullable = false, unique = true)
     private String code;

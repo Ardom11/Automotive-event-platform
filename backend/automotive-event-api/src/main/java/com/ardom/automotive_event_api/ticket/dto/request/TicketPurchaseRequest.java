@@ -1,8 +1,12 @@
 package com.ardom.automotive_event_api.ticket.dto.request;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.validation.constraints.Min;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
+
+import java.util.List;
 
 @Schema(description = "Request body for purchasing tickets as an authenticated user")
 public record TicketPurchaseRequest(
@@ -11,10 +15,13 @@ public record TicketPurchaseRequest(
         @NotNull
         Long eventId,
 
-        @Schema(description = "Number of tickets to purchase. Must be at least 1 and must not exceed remaining capacity.",
-                example = "2", minimum = "1")
-        @NotNull
-        @Min(1)
-        Integer quantity
+        @Schema(description = "Name of the attendee for each ticket being purchased. " +
+                "List size determines quantity (1–20 tickets per purchase).")
+        @NotEmpty
+        @Size(max = 20)
+        List<@Valid TicketHolderRequest> ticketHolders
 ) {
+    public Integer quantity() {
+        return ticketHolders.size();
+    }
 }

@@ -11,6 +11,12 @@ public record TicketSummaryResponse(
         @Schema(description = "Name of the event this ticket is for", example = "Milano AutoClassica 2026")
         String eventName,
 
+        @Schema(description = "Name of the recipient", example = "Marco")
+        String name,
+
+        @Schema(description = "Surname of the recipient", example = "Rossi")
+        String surname,
+
         @Schema(description = "Human-readable event date string", example = "14 June 2026")
         String date,
 

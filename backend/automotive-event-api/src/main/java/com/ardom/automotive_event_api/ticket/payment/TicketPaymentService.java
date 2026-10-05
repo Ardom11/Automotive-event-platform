@@ -14,8 +14,10 @@ import com.ardom.automotive_event_api.event.exception.NotEnoughEventTicketsExcep
 import com.ardom.automotive_event_api.payment.PaymentStatus;
 import com.ardom.automotive_event_api.payment.dto.response.CheckoutResponse;
 import com.ardom.automotive_event_api.ticket.Ticket;
+import com.ardom.automotive_event_api.ticket.TicketHolder;
 import com.ardom.automotive_event_api.ticket.TicketRepository;
 import com.ardom.automotive_event_api.ticket.TicketStatus;
+import com.ardom.automotive_event_api.ticket.dto.request.TicketHolderRequest;
 import com.ardom.automotive_event_api.ticket.dto.request.TicketPurchaseGuestRequest;
 import com.ardom.automotive_event_api.ticket.dto.request.TicketPurchaseRequest;
 import com.ardom.automotive_event_api.ticket.util.TicketCodeGenerator;
@@ -31,7 +33,6 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -54,7 +55,7 @@ public class TicketPaymentService {
         TicketPayment payment = TicketPayment.builder()
                 .event(event)
                 .user(user)
-                .quantity(request.quantity())
+                .ticketHolders(toHolders(request.ticketHolders()))
                 .amountPaid(event.getTicketPrice().multiply(BigDecimal.valueOf(request.quantity())))
                 .status(PaymentStatus.PENDING)
                 .build();
@@ -75,10 +76,8 @@ public class TicketPaymentService {
 
         TicketPayment payment = TicketPayment.builder()
                 .event(event)
-                .guestName(request.guestName())
-                .guestSurname(request.guestSurname())
                 .guestEmail(request.guestEmail())
-                .quantity(request.quantity())
+                .ticketHolders(toHolders(request.ticketHolders()))
                 .amountPaid(event.getTicketPrice().multiply(BigDecimal.valueOf(request.quantity())))
                 .status(PaymentStatus.PENDING)
                 .build();
@@ -93,7 +92,12 @@ public class TicketPaymentService {
         return new CheckoutResponse(session.getUrl());
     }
 
-    // TODO check that after refactoring ticketing system
+    private List<TicketHolder> toHolders(List<TicketHolderRequest> holders) {
+        return holders.stream()
+                .map(h -> new TicketHolder(h.name(), h.surname()))
+                .toList();
+    }
+
     @Transactional
     public void handleSuccessfulCheckout(Long ticketPaymentId) {
         TicketPayment payment = ticketPaymentRepository.findById(ticketPaymentId)
@@ -106,30 +110,29 @@ public class TicketPaymentService {
         payment.setStatus(PaymentStatus.SUCCEEDED);
         payment.setPaidAt(LocalDateTime.now());
 
-        List<Ticket> tickets = new ArrayList<>();
-        for (int i = 0; i < payment.getQuantity(); i++) {
-            Ticket ticket = Ticket.builder()
-                    .payment(payment)
-                    .event(payment.getEvent())
-                    .user(payment.getUser())
-                    .guestEmail(payment.getGuestEmail())
-                    .code(TicketCodeGenerator.generate())
-                    .status(TicketStatus.ACTIVE)
-                    .price(payment.getEvent().getTicketPrice())
-                    .build();
-            tickets.add(ticket);
-        }
+        List<Ticket> tickets = payment.getTicketHolders().stream()
+                .map(holder -> Ticket.builder()
+                        .payment(payment)
+                        .event(payment.getEvent())
+                        .user(payment.getUser())
+                        .name(holder.getName())
+                        .surname(holder.getSurname())
+                        .code(TicketCodeGenerator.generate())
+                        .status(TicketStatus.ACTIVE)
+                        .price(payment.getEvent().getTicketPrice())
+                        .build())
+                .toList();
 
         ticketRepository.saveAll(tickets);
+
         List<TicketData> ticketsData = tickets.stream()
                 .map(t -> {
-                    User user = t.getUser();
                     Event event = t.getEvent();
                     EventLocation location = event.getLocation();
                     return new TicketData(
                             t.getCode(),
-                            user.getName(),
-                            user.getSurname(),
+                            t.getName(),
+                            t.getSurname(),
                             event.getName(),
                             event.getDateStart(),
                             event.getDateEnd(),

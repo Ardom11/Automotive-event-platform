@@ -47,8 +47,8 @@ public class TicketService {
         EventLocation location = event.getLocation();
         return pdfService.generateTicketPdf(new TicketData(
                 ticket.getCode(),
-                user.getName(),
-                user.getSurname(),
+                ticket.getName(),
+                ticket.getSurname(),
                 event.getName(),
                 event.getDateStart(),
                 event.getDateEnd(),
