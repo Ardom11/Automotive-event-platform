@@ -8,7 +8,6 @@ import com.ardom.automotive_event_api.application.dto.request.UpdateApplicationR
 import com.ardom.automotive_event_api.application.dto.response.AdminApplicationResponse;
 import com.ardom.automotive_event_api.application.dto.response.ApplicationResponse;
 import com.ardom.automotive_event_api.application.exception.*;
-import com.ardom.automotive_event_api.common.email.EmailService;
 import com.ardom.automotive_event_api.event.Event;
 import com.ardom.automotive_event_api.event.EventRepository;
 import com.ardom.automotive_event_api.event.EventStatus;
@@ -28,6 +27,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -62,7 +62,7 @@ class ApplicationServiceTest {
     @Mock
     private Authentication authentication;
     @Mock
-    private EmailService emailService;
+    private ApplicationEventPublisher eventPublisher;
 
     private final UserMapper userMapper = new UserMapper();
     private final ApplicationMapper applicationMapper = new ApplicationMapper(userMapper);
@@ -84,7 +84,7 @@ class ApplicationServiceTest {
                 eventRepository,
                 applicationMapper,
                 carMapper,
-                emailService
+                eventPublisher
         );
 
         ReflectionTestUtils.setField(applicationService, "maxCars", 5);
@@ -710,7 +710,7 @@ class ApplicationServiceTest {
                     .thenAnswer(invocation -> invocation.getArgument(0));
 
             // when
-            AdminApplicationResponse response = applicationService.rejectApplication(application.getId(), new RejectApplicationRequest(""));
+            AdminApplicationResponse response = applicationService.rejectApplication(application.getId(), null);
 
             // then
             assertThat(response.status()).isEqualTo(ApplicationStatus.REJECTED);

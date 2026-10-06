@@ -6,7 +6,8 @@ import com.ardom.automotive_event_api.application.ApplicationStatus;
 import com.ardom.automotive_event_api.application.car.CarRepository;
 import com.ardom.automotive_event_api.application.exception.ApplicationNotFoundException;
 import com.ardom.automotive_event_api.application.exception.ApplicationPaymentNotFoundException;
-import com.ardom.automotive_event_api.common.email.EmailService;
+import com.ardom.automotive_event_api.common.notification.ApplicationPaymentNotification;
+import com.ardom.automotive_event_api.common.notification.event.ApplicationPaidEvent;
 import com.ardom.automotive_event_api.event.Event;
 import com.ardom.automotive_event_api.payment.PaymentStatus;
 import com.ardom.automotive_event_api.payment.dto.response.CheckoutResponse;
@@ -26,6 +27,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.core.Authentication;
 import org.springframework.test.util.ReflectionTestUtils;
 
@@ -51,7 +53,7 @@ class ApplicationPaymentServiceTest {
     @Mock
     private Authentication authentication;
     @Mock
-    private EmailService emailService;
+    private ApplicationEventPublisher eventPublisher;
 
     @InjectMocks
     private ApplicationPaymentService applicationPaymentService;
@@ -243,6 +245,7 @@ class ApplicationPaymentServiceTest {
             assertThat(application.getStatus()).isEqualTo(ApplicationStatus.COMPLETED);
         }
 
+        //TODO
         @Test
         @DisplayName("should send confirmation email on success")
         void handleSuccessfulCheckout_shouldSendConfirmationEmail_whenPaymentSucceeds() {
@@ -260,15 +263,16 @@ class ApplicationPaymentServiceTest {
             applicationPaymentService.handleSuccessfulCheckout(10L);
 
             // Then
-            verify(emailService).sendPaymentConfirmed(argThat(n ->
-                    n.applicationId().equals(application.getId()) &&
-                            n.status() == ApplicationStatus.COMPLETED &&
-                            n.applicantEmail().equals(application.getUser().getEmail()) &&
-                            n.applicantName().equals(application.getUser().getName()) &&
-                            n.applicantSurname().equals(application.getUser().getSurname()) &&
-                            n.eventName().equals(application.getEvent().getName()) &&
-                            n.paymentData().amountPaid().compareTo(new BigDecimal("120.00")) == 0
-            ));
+            verify(eventPublisher).publishEvent((Object) argThat(e -> {
+                if (!(e instanceof ApplicationPaidEvent(ApplicationPaymentNotification n))) return false;
+                return n.applicationId().equals(application.getId()) &&
+                        n.status() == ApplicationStatus.COMPLETED &&
+                        n.applicantEmail().equals(application.getUser().getEmail()) &&
+                        n.applicantName().equals(application.getUser().getName()) &&
+                        n.applicantSurname().equals(application.getUser().getSurname()) &&
+                        n.eventName().equals(application.getEvent().getName()) &&
+                        n.paymentData().amountPaid().compareTo(new BigDecimal("120.00")) == 0;
+            }));
         }
 
         @Test
@@ -289,7 +293,7 @@ class ApplicationPaymentServiceTest {
             // Then
             // Application status should not be touched again
             assertThat(application.getStatus()).isEqualTo(ApplicationStatus.APPROVED_WAITING_PAYMENT);
-            verify(emailService, never()).sendPaymentConfirmed(any());
+            verify(eventPublisher, never()).publishEvent(any());
         }
 
         @Test

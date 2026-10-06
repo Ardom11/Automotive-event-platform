@@ -1,9 +1,9 @@
 package com.ardom.automotive_event_api.ticket.payment;
 
 import com.ardom.automotive_event_api.application.exception.TicketPaymentNotFoundException;
-import com.ardom.automotive_event_api.common.email.EmailService;
 import com.ardom.automotive_event_api.common.notification.TicketData;
 import com.ardom.automotive_event_api.common.notification.TicketNotification;
+import com.ardom.automotive_event_api.common.notification.event.TicketIssuedEvent;
 import com.ardom.automotive_event_api.event.Event;
 import com.ardom.automotive_event_api.event.EventLocation;
 import com.ardom.automotive_event_api.event.EventRepository;
@@ -28,6 +28,7 @@ import com.stripe.param.checkout.SessionCreateParams;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
@@ -44,7 +45,7 @@ public class TicketPaymentService {
     private final TicketPaymentRepository ticketPaymentRepository;
     private final TicketRepository ticketRepository;
     private final EventRepository eventRepository;
-    private final EmailService emailService;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Transactional
     public CheckoutResponse initiateCheckout(Authentication authentication, TicketPurchaseRequest request) throws StripeException {
@@ -145,7 +146,7 @@ public class TicketPaymentService {
                 .toList();
 
         String email = payment.getUser() != null ? payment.getUser().getEmail() : payment.getGuestEmail();
-        emailService.sendTicket(new TicketNotification(email, ticketsData));
+        eventPublisher.publishEvent(new TicketIssuedEvent(new TicketNotification(email, ticketsData)));
     }
 
     @Transactional

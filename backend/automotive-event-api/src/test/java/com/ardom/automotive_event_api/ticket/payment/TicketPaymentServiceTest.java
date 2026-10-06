@@ -1,8 +1,8 @@
 package com.ardom.automotive_event_api.ticket.payment;
 
 import com.ardom.automotive_event_api.application.exception.TicketPaymentNotFoundException;
-import com.ardom.automotive_event_api.common.email.EmailService;
 import com.ardom.automotive_event_api.common.notification.TicketNotification;
+import com.ardom.automotive_event_api.common.notification.event.TicketIssuedEvent;
 import com.ardom.automotive_event_api.event.Event;
 import com.ardom.automotive_event_api.event.EventLocation;
 import com.ardom.automotive_event_api.event.EventRepository;
@@ -34,6 +34,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.core.Authentication;
 import org.springframework.test.util.ReflectionTestUtils;
 
@@ -60,7 +61,7 @@ class TicketPaymentServiceTest {
     @Mock
     private Authentication authentication;
     @Mock
-    private EmailService emailService;
+    private ApplicationEventPublisher eventPublisher;
 
     @InjectMocks
     private TicketPaymentService ticketPaymentService;
@@ -391,10 +392,10 @@ class TicketPaymentServiceTest {
                 assertThat(ticket.getEvent()).isEqualTo(event);
             });
 
-            ArgumentCaptor<TicketNotification> notificationCaptor = ArgumentCaptor.forClass(TicketNotification.class);
-            verify(emailService).sendTicket(notificationCaptor.capture());
+            ArgumentCaptor<TicketIssuedEvent> notificationCaptor = ArgumentCaptor.forClass(TicketIssuedEvent.class);
+            verify(eventPublisher).publishEvent(notificationCaptor.capture());
 
-            TicketNotification notification = notificationCaptor.getValue();
+            TicketNotification notification = notificationCaptor.getValue().notification();
             assertThat(notification.recipientEmail()).isEqualTo(user.getEmail());
             assertThat(notification.tickets()).hasSize(2);
         }
@@ -417,9 +418,9 @@ class TicketPaymentServiceTest {
             ticketPaymentService.handleSuccessfulCheckout(20L);
 
             // Then
-            ArgumentCaptor<TicketNotification> notificationCaptor = ArgumentCaptor.forClass(TicketNotification.class);
-            verify(emailService).sendTicket(notificationCaptor.capture());
-            assertThat(notificationCaptor.getValue().recipientEmail()).isEqualTo(payment.getGuestEmail());
+            ArgumentCaptor<TicketIssuedEvent> notificationCaptor = ArgumentCaptor.forClass(TicketIssuedEvent.class);
+            verify(eventPublisher).publishEvent(notificationCaptor.capture());
+            assertThat(notificationCaptor.getValue().notification().recipientEmail()).isEqualTo("jane@example.com");
         }
 
         @Test
@@ -441,7 +442,7 @@ class TicketPaymentServiceTest {
 
             // Then
             verify(ticketRepository, never()).saveAll(any());
-            verify(emailService, never()).sendTicket(any());
+            verify(eventPublisher, never()).publishEvent(any());
         }
 
         @Test

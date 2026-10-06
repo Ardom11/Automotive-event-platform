@@ -7,10 +7,10 @@ import com.ardom.automotive_event_api.application.car.Car;
 import com.ardom.automotive_event_api.application.car.CarRepository;
 import com.ardom.automotive_event_api.application.exception.ApplicationNotFoundException;
 import com.ardom.automotive_event_api.application.exception.ApplicationPaymentNotFoundException;
-import com.ardom.automotive_event_api.common.email.EmailService;
 import com.ardom.automotive_event_api.common.notification.ApplicationPaymentNotification;
 import com.ardom.automotive_event_api.common.notification.CarData;
 import com.ardom.automotive_event_api.common.notification.PaymentData;
+import com.ardom.automotive_event_api.common.notification.event.ApplicationPaidEvent;
 import com.ardom.automotive_event_api.payment.PaymentStatus;
 import com.ardom.automotive_event_api.payment.dto.response.CheckoutResponse;
 import com.ardom.automotive_event_api.payment.exception.PaymentAlreadyInitiatedException;
@@ -21,6 +21,7 @@ import com.stripe.param.checkout.SessionCreateParams;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
@@ -41,7 +42,7 @@ public class ApplicationPaymentService {
     private final ApplicationPaymentRepository applicationPaymentRepository;
     private final ApplicationRepository applicationRepository;
     private final CarRepository carRepository;
-    private final EmailService emailService;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Transactional
     public CheckoutResponse initiateCheckout(Authentication authentication, Long applicationId) throws StripeException {
@@ -88,7 +89,7 @@ public class ApplicationPaymentService {
                         car.getYear()
                 ))
                 .toList();
-        emailService.sendPaymentConfirmed(new ApplicationPaymentNotification(
+        eventPublisher.publishEvent(new ApplicationPaidEvent(new ApplicationPaymentNotification(
                 application.getId(),
                 application.getStatus(),
                 application.getUser().getEmail(),
@@ -101,7 +102,7 @@ public class ApplicationPaymentService {
                         payment.getPaidAt(),
                         payment.getStatus()
                 )
-        ));
+        )));
     }
 
     @Transactional

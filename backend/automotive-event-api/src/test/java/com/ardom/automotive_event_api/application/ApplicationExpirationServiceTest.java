@@ -1,6 +1,5 @@
 package com.ardom.automotive_event_api.application;
 
-import com.ardom.automotive_event_api.common.email.EmailService;
 import com.ardom.automotive_event_api.event.Event;
 import com.ardom.automotive_event_api.user.User;
 import org.junit.jupiter.api.BeforeEach;
@@ -12,6 +11,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.LocalDate;
@@ -21,9 +21,7 @@ import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("ApplicationExpirationService")
@@ -33,7 +31,7 @@ class ApplicationExpirationServiceTest {
     private ApplicationRepository applicationRepository;
 
     @Mock
-    private EmailService emailService;
+    private ApplicationEventPublisher eventPublisher;
 
     @InjectMocks
     private ApplicationExpirationService applicationExpirationService;
