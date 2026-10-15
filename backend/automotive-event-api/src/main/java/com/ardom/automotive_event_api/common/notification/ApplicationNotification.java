@@ -7,6 +7,7 @@ public record ApplicationNotification(
         String applicantEmail,
         String eventName,
         LocalDate paymentDeadline,
-        String rejectionReason
+        String rejectionReason,
+        ApplicationEventType eventType
 ) {
 }

@@ -49,6 +49,7 @@ The core business flow has two main tracks:
 | PDF Generation   | OpenPDF                               |
 | Containerisation | Docker                                |
 | Build Tool       | Maven                                 |
+ | Messaging       | Kafka                                 |
 
 ---
 
@@ -66,7 +67,6 @@ The core business flow has two main tracks:
 
 ```bash
 git clone https://github.com/yourusername/automotive-event-api.git
-cd automotive-event-api
 ```
 
 ### 2. Configure environment variables
@@ -82,13 +82,13 @@ Fill in `.env`:
 APPLICATION_BASE_URL=http://localhost:8080
 
 # Database
-POSTGRES_DB=AutomotiveEventAPI
-POSTGRES_USER=postgres
-POSTGRES_PASSWORD=mysecretpassword
+POSTGRES_DB=
+POSTGRES_USER=
+POSTGRES_PASSWORD=
 
-SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/AutomotiveEventAPI
-SPRING_DATASOURCE_USERNAME=postgres
-SPRING_DATASOURCE_PASSWORD=mysecretpassword
+SPRING_DATASOURCE_URL=
+SPRING_DATASOURCE_USERNAME=
+SPRING_DATASOURCE_PASSWORD=
 
 # JWT
 SECRET_KEY=your_super_secret_key_at_least_32_chars
@@ -124,7 +124,7 @@ stripe listen --forward-to localhost:8080/webhooks/stripe
 ### 4. Start the application
 
 ```bash
-docker-compose up --build
+docker compose up --build
 ```
 
 ---
@@ -192,21 +192,21 @@ docker-compose up --build
 │   TicketController · PaymentController · WebhookController  │
 └───────────────────────────┬─────────────────────────────────┘
                             │
-┌───────────────────────────▼─────────────────────────────────┐
-│                       Service Layer                          │
-│  Business logic · State transitions · Deadline validation   │
-│  Stripe session creation · Idempotency · Email dispatch     │
-└──────┬─────────────────┬────────────────┬───────────────────┘
-       │                 │                │
-┌──────▼──────┐  ┌───────▼──────┐  ┌─────▼──────────────────┐
-│ Repository  │  │ Stripe SDK   │  │ External Services       │
-│ Layer (JPA) │  │              │  │ Cloudinary · Mail · PDF │
-└──────┬──────┘  └──────────────┘  └────────────────────────┘
-       │
-┌──────▼──────┐
-│ PostgreSQL  │
-│ (Flyway)    │
-└─────────────┘
+┌───────────────────────────▼───────────────────────────────────────────────┐
+│                       Service Layer                                       │
+│  Business logic · State transitions · Deadline validation · Idempotency   │
+│  Stripe session creation                                                  │
+└──────┬─────────────────┬────────────────┬──────────────────────────────┬──┘
+       │                 │                │                              │
+┌──────▼──────┐  ┌───────▼──────┐  ┌─────▼──────────────────┐      ┌─────▼─────┐
+│ Repository  │  │ Stripe SDK   │  │ External Services       │     │   Kafka   │
+│ Layer (JPA) │  │              │  │ Cloudinary · Mail · PDF │     │           │
+└──────┬──────┘  └──────────────┘  └────────────────────────┘      └─────┬─────┘
+       │                                                                 │
+┌──────▼──────┐                                                   ┌──────▼───────┐
+│ PostgreSQL  │                                                   │ Notification │
+│ (Flyway)    │                                                   │ service      │
+└─────────────┘                                                   └──────────────┘
 ```
 
 **Package structure follows domain slicing, not technical layering:**
@@ -217,7 +217,7 @@ event/       → event CRUD, status transitions
 application/ → car applications, state machine
 ticket/      → ticket creation and management
 payment/     → Stripe sessions, webhook routing, fulfillment
-common/      → email, PDF, scheduling, exception handling, config
+common/      → PDF, scheduling, exception handling, config
 ```
 
 ---
@@ -298,5 +298,4 @@ Full list of API endpoints:
 
 - **Frontend** — React/Next.js client implementing the user flows designed during planning
 - **Integration test suite** — Full `@SpringBootTest` coverage for the payment and webhook flows
-- **CI/CD pipeline** — GitHub Actions building and pushing Docker image on merge to main
 - **Admin dashboard metrics** — Tickets sold per event, application conversion rate, revenue summary

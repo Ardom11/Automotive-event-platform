@@ -1,10 +1,10 @@
-package com.ardom.automotive_event_api.common.email;
+package com.ardom.notification_service.service;
 
-import com.ardom.automotive_event_api.common.notification.ApplicationNotification;
-import com.ardom.automotive_event_api.common.notification.ApplicationPaymentNotification;
-import com.ardom.automotive_event_api.common.notification.TicketData;
-import com.ardom.automotive_event_api.common.notification.TicketNotification;
-import com.ardom.automotive_event_api.common.pdf.PdfService;
+import com.ardom.notification_service.model.ApplicationNotification;
+import com.ardom.notification_service.model.ApplicationPaymentNotification;
+import com.ardom.notification_service.model.TicketData;
+import com.ardom.notification_service.model.TicketNotification;
+import com.ardom.notification_service.pdf.PdfService;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;

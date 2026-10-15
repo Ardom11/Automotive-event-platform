@@ -7,7 +7,6 @@ import com.ardom.automotive_event_api.application.car.CarRepository;
 import com.ardom.automotive_event_api.application.exception.ApplicationNotFoundException;
 import com.ardom.automotive_event_api.application.exception.ApplicationPaymentNotFoundException;
 import com.ardom.automotive_event_api.common.notification.ApplicationPaymentNotification;
-import com.ardom.automotive_event_api.common.notification.event.ApplicationPaidEvent;
 import com.ardom.automotive_event_api.event.Event;
 import com.ardom.automotive_event_api.payment.PaymentStatus;
 import com.ardom.automotive_event_api.payment.dto.response.CheckoutResponse;
@@ -264,7 +263,7 @@ class ApplicationPaymentServiceTest {
 
             // Then
             verify(eventPublisher).publishEvent((Object) argThat(e -> {
-                if (!(e instanceof ApplicationPaidEvent(ApplicationPaymentNotification n))) return false;
+                if (!(e instanceof ApplicationPaymentNotification n)) return false;
                 return n.applicationId().equals(application.getId()) &&
                         n.status() == ApplicationStatus.COMPLETED &&
                         n.applicantEmail().equals(application.getUser().getEmail()) &&

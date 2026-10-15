@@ -2,7 +2,6 @@ package com.ardom.automotive_event_api.ticket.payment;
 
 import com.ardom.automotive_event_api.application.exception.TicketPaymentNotFoundException;
 import com.ardom.automotive_event_api.common.notification.TicketNotification;
-import com.ardom.automotive_event_api.common.notification.event.TicketIssuedEvent;
 import com.ardom.automotive_event_api.event.Event;
 import com.ardom.automotive_event_api.event.EventLocation;
 import com.ardom.automotive_event_api.event.EventRepository;
@@ -392,10 +391,10 @@ class TicketPaymentServiceTest {
                 assertThat(ticket.getEvent()).isEqualTo(event);
             });
 
-            ArgumentCaptor<TicketIssuedEvent> notificationCaptor = ArgumentCaptor.forClass(TicketIssuedEvent.class);
+            ArgumentCaptor<TicketNotification> notificationCaptor = ArgumentCaptor.forClass(TicketNotification.class);
             verify(eventPublisher).publishEvent(notificationCaptor.capture());
 
-            TicketNotification notification = notificationCaptor.getValue().notification();
+            TicketNotification notification = notificationCaptor.getValue();
             assertThat(notification.recipientEmail()).isEqualTo(user.getEmail());
             assertThat(notification.tickets()).hasSize(2);
         }
@@ -418,9 +417,9 @@ class TicketPaymentServiceTest {
             ticketPaymentService.handleSuccessfulCheckout(20L);
 
             // Then
-            ArgumentCaptor<TicketIssuedEvent> notificationCaptor = ArgumentCaptor.forClass(TicketIssuedEvent.class);
+            ArgumentCaptor<TicketNotification> notificationCaptor = ArgumentCaptor.forClass(TicketNotification.class);
             verify(eventPublisher).publishEvent(notificationCaptor.capture());
-            assertThat(notificationCaptor.getValue().notification().recipientEmail()).isEqualTo("jane@example.com");
+            assertThat(notificationCaptor.getValue().recipientEmail()).isEqualTo("jane@example.com");
         }
 
         @Test

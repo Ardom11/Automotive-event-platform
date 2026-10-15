@@ -10,7 +10,6 @@ import com.ardom.automotive_event_api.application.exception.ApplicationPaymentNo
 import com.ardom.automotive_event_api.common.notification.ApplicationPaymentNotification;
 import com.ardom.automotive_event_api.common.notification.CarData;
 import com.ardom.automotive_event_api.common.notification.PaymentData;
-import com.ardom.automotive_event_api.common.notification.event.ApplicationPaidEvent;
 import com.ardom.automotive_event_api.payment.PaymentStatus;
 import com.ardom.automotive_event_api.payment.dto.response.CheckoutResponse;
 import com.ardom.automotive_event_api.payment.exception.PaymentAlreadyInitiatedException;
@@ -89,7 +88,7 @@ public class ApplicationPaymentService {
                         car.getYear()
                 ))
                 .toList();
-        eventPublisher.publishEvent(new ApplicationPaidEvent(new ApplicationPaymentNotification(
+        eventPublisher.publishEvent(new ApplicationPaymentNotification(
                 application.getId(),
                 application.getStatus(),
                 application.getUser().getEmail(),
@@ -102,7 +101,7 @@ public class ApplicationPaymentService {
                         payment.getPaidAt(),
                         payment.getStatus()
                 )
-        )));
+        ));
     }
 
     @Transactional

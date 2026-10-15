@@ -8,9 +8,7 @@ import com.ardom.automotive_event_api.application.dto.request.UpdateApplicationR
 import com.ardom.automotive_event_api.application.dto.response.*;
 import com.ardom.automotive_event_api.application.exception.*;
 import com.ardom.automotive_event_api.common.notification.ApplicationNotification;
-import com.ardom.automotive_event_api.common.notification.event.ApplicationApprovedEvent;
-import com.ardom.automotive_event_api.common.notification.event.ApplicationReceivedEvent;
-import com.ardom.automotive_event_api.common.notification.event.ApplicationRejectedEvent;
+import com.ardom.automotive_event_api.common.notification.ApplicationEventType;
 import com.ardom.automotive_event_api.event.Event;
 import com.ardom.automotive_event_api.event.EventRepository;
 import com.ardom.automotive_event_api.event.EventStatus;
@@ -169,13 +167,14 @@ public class ApplicationService {
 
         application = applicationRepository.save(application);
 
-        eventPublisher.publishEvent(new ApplicationReceivedEvent(new ApplicationNotification(
+        eventPublisher.publishEvent(new ApplicationNotification(
                 application.getId(),
                 application.getUser().getEmail(),
                 application.getEvent().getName(),
                 application.getEvent().getPaymentDeadline(),
-                application.getRejectionReason()
-        )));
+                application.getRejectionReason(),
+                ApplicationEventType.APPLICATION_RECEIVED
+        ));
 
         return getApplication(authentication, id);
     }
@@ -281,13 +280,14 @@ public class ApplicationService {
 
         application = applicationRepository.save(application);
 
-        eventPublisher.publishEvent(new ApplicationApprovedEvent(new ApplicationNotification(
+        eventPublisher.publishEvent(new ApplicationNotification(
                 application.getId(),
                 application.getUser().getEmail(),
                 application.getEvent().getName(),
                 application.getEvent().getPaymentDeadline(),
-                application.getRejectionReason()
-        )));
+                application.getRejectionReason(),
+                ApplicationEventType.APPLICATION_APPROVED
+        ));
 
         return getApplicationForAdmin(id);
     }
@@ -307,13 +307,14 @@ public class ApplicationService {
 
         application = applicationRepository.save(application);
 
-        eventPublisher.publishEvent(new ApplicationRejectedEvent(new ApplicationNotification(
+        eventPublisher.publishEvent(new ApplicationNotification(
                 application.getId(),
                 application.getUser().getEmail(),
                 application.getEvent().getName(),
                 application.getEvent().getPaymentDeadline(),
-                application.getRejectionReason()
-        )));
+                application.getRejectionReason(),
+                ApplicationEventType.APPLICATION_REJECTED
+        ));
 
         return getApplicationForAdmin(id);
     }

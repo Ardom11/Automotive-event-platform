@@ -3,7 +3,6 @@ package com.ardom.automotive_event_api.ticket.payment;
 import com.ardom.automotive_event_api.application.exception.TicketPaymentNotFoundException;
 import com.ardom.automotive_event_api.common.notification.TicketData;
 import com.ardom.automotive_event_api.common.notification.TicketNotification;
-import com.ardom.automotive_event_api.common.notification.event.TicketIssuedEvent;
 import com.ardom.automotive_event_api.event.Event;
 import com.ardom.automotive_event_api.event.EventLocation;
 import com.ardom.automotive_event_api.event.EventRepository;
@@ -146,7 +145,7 @@ public class TicketPaymentService {
                 .toList();
 
         String email = payment.getUser() != null ? payment.getUser().getEmail() : payment.getGuestEmail();
-        eventPublisher.publishEvent(new TicketIssuedEvent(new TicketNotification(email, ticketsData)));
+        eventPublisher.publishEvent(new TicketNotification(email, ticketsData));
     }
 
     @Transactional
