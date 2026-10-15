@@ -47,6 +47,8 @@ application:
     jwt:
       secret: ${SECRET_KEY}
       expiration: 3600000
+    cookie:
+      secure: true
   storage:
     max-file-size-bytes: 5242880
   base-url: ${APPLICATION_BASE_URL}
