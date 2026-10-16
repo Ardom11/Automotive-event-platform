@@ -66,7 +66,7 @@ The core business flow has two main tracks:
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.com/yourusername/automotive-event-api.git
+git clone https://github.com/Ardom11/Automotive-event-platform.git
 ```
 
 ### 2. Configure environment variables
