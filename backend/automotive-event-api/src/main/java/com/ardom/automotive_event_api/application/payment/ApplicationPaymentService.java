@@ -3,9 +3,13 @@ package com.ardom.automotive_event_api.application.payment;
 import com.ardom.automotive_event_api.application.Application;
 import com.ardom.automotive_event_api.application.ApplicationRepository;
 import com.ardom.automotive_event_api.application.ApplicationStatus;
+import com.ardom.automotive_event_api.application.car.Car;
+import com.ardom.automotive_event_api.application.car.CarRepository;
 import com.ardom.automotive_event_api.application.exception.ApplicationNotFoundException;
 import com.ardom.automotive_event_api.application.exception.ApplicationPaymentNotFoundException;
-import com.ardom.automotive_event_api.common.email.EmailService;
+import com.ardom.automotive_event_api.common.notification.ApplicationPaymentNotification;
+import com.ardom.automotive_event_api.common.notification.CarData;
+import com.ardom.automotive_event_api.common.notification.PaymentData;
 import com.ardom.automotive_event_api.payment.PaymentStatus;
 import com.ardom.automotive_event_api.payment.dto.response.CheckoutResponse;
 import com.ardom.automotive_event_api.payment.exception.PaymentAlreadyInitiatedException;
@@ -16,6 +20,7 @@ import com.stripe.param.checkout.SessionCreateParams;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
@@ -26,6 +31,7 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class ApplicationPaymentService {
+
     @Value("${application.base-url}")
     private String baseUrl;
 
@@ -34,7 +40,8 @@ public class ApplicationPaymentService {
 
     private final ApplicationPaymentRepository applicationPaymentRepository;
     private final ApplicationRepository applicationRepository;
-    private final EmailService emailService;
+    private final CarRepository carRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Transactional
     public CheckoutResponse initiateCheckout(Authentication authentication, Long applicationId) throws StripeException {
@@ -73,10 +80,28 @@ public class ApplicationPaymentService {
         Application application = payment.getApplication();
         application.setStatus(ApplicationStatus.COMPLETED);
 
-        emailService.sendPaymentConfirmed(
-                application,
-                application.getUser(),
-                application.getEvent().getName());
+        List<Car> cars = carRepository.findAllByApplicationId(application.getId());
+        List<CarData> carsData = cars.stream()
+                .map(car -> new CarData(
+                        car.getBrand(),
+                        car.getModel(),
+                        car.getYear()
+                ))
+                .toList();
+        eventPublisher.publishEvent(new ApplicationPaymentNotification(
+                application.getId(),
+                application.getStatus(),
+                application.getUser().getEmail(),
+                application.getUser().getName(),
+                application.getUser().getSurname(),
+                application.getEvent().getName(),
+                carsData,
+                new PaymentData(
+                        payment.getAmountPaid(),
+                        payment.getPaidAt(),
+                        payment.getStatus()
+                )
+        ));
     }
 
     @Transactional

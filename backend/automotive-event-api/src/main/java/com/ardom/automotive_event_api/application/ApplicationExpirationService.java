@@ -1,9 +1,11 @@
 package com.ardom.automotive_event_api.application;
 
-import com.ardom.automotive_event_api.common.email.EmailService;
+import com.ardom.automotive_event_api.common.notification.ApplicationNotification;
+import com.ardom.automotive_event_api.common.notification.ApplicationEventType;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
@@ -16,7 +18,7 @@ public class ApplicationExpirationService {
     private Integer daysBeforeEvent;
 
     private final ApplicationRepository applicationRepository;
-    private final EmailService emailService;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Transactional
     public void expireUnpaidApplications() {
@@ -30,7 +32,15 @@ public class ApplicationExpirationService {
 
         toExpire.forEach(app -> {
             app.setStatus(ApplicationStatus.EXPIRED);
-            emailService.sendApplicationExpired(applicationRepository.save(app));
+            app = applicationRepository.save(app);
+            eventPublisher.publishEvent(new ApplicationNotification(
+                    app.getId(),
+                    app.getUser().getEmail(),
+                    app.getEvent().getName(),
+                    app.getEvent().getPaymentDeadline(),
+                    app.getRejectionReason(),
+                    ApplicationEventType.APPLICATION_EXPIRED
+            ));
         });
     }
 }

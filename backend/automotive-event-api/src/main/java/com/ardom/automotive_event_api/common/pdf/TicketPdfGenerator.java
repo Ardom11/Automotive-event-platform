@@ -1,8 +1,6 @@
 package com.ardom.automotive_event_api.common.pdf;
 
-import com.ardom.automotive_event_api.event.Event;
-import com.ardom.automotive_event_api.event.EventLocation;
-import com.ardom.automotive_event_api.ticket.Ticket;
+import com.ardom.automotive_event_api.common.notification.TicketData;
 import org.openpdf.text.*;
 import org.openpdf.text.pdf.PdfWriter;
 
@@ -11,10 +9,10 @@ import java.time.format.DateTimeFormatter;
 
 public class TicketPdfGenerator {
 
-    private final Ticket ticket;
+    private final TicketData ticket;
     private final Document document;
 
-    public TicketPdfGenerator(Ticket ticket) {
+    public TicketPdfGenerator(TicketData ticket) {
         this.ticket = ticket;
         this.document = new Document(PageSize.A4);
     }
@@ -45,32 +43,25 @@ public class TicketPdfGenerator {
     }
 
     private void addEventDetails() {
-        Event event = ticket.getEvent();
-
         document.add(new Paragraph("Event Details"));
-        document.add(new Paragraph("Event: " + event.getName()));
+        document.add(new Paragraph("Event: " + ticket.eventName()));
         document.add(new Paragraph(String.format("Date: %s - %s",
-                event.getDateStart().format(DateTimeFormatter.ofPattern("dd MMM yyyy HH:mm")),
-                event.getDateEnd().format(DateTimeFormatter.ofPattern("dd MMM yyyy HH:mm")))));
-        EventLocation location = event.getLocation();
-        document.add(new Paragraph("Place: " + location.getPlace()));
-        document.add(new Paragraph(String.format("%s, %s", location.getCity(), location.getCountry())));
-        document.add(new Paragraph(location.getAddress()));
+                ticket.eventDateStart().format(DateTimeFormatter.ofPattern("dd MMM yyyy HH:mm")),
+                ticket.eventDateEnd().format(DateTimeFormatter.ofPattern("dd MMM yyyy HH:mm")))));
+        document.add(new Paragraph("Place: " + ticket.locationPlace()));
+        document.add(new Paragraph(String.format("%s, %s", ticket.locationCity(), ticket.locationCountry())));
+        document.add(new Paragraph(ticket.locationAddress()));
         document.add(new Paragraph("\n"));
     }
 
     private void addTicketInfo() {
-        String holderName = ticket.getUser() != null
-                ? ticket.getUser().getName() + " " + ticket.getUser().getSurname()
-                : ticket.getPayment().getGuestName() + " " + ticket.getPayment().getGuestSurname();
-
         document.add(new Paragraph("Ticket Holder"));
-        document.add(new Paragraph("Name: " + holderName));
-        document.add(new Paragraph(String.format("Ticket №: %s\n", ticket.getCode())));
+        document.add(new Paragraph("Name: " + ticket.holderName() + " " + ticket.holderSurname()));
+        document.add(new Paragraph(String.format("Ticket №: %s\n", ticket.ticketCode())));
     }
 
     private void addTicketCode() {
-        Paragraph code = new Paragraph("Ticket Code: " + ticket.getCode());
+        Paragraph code = new Paragraph("Ticket Code: " + ticket.ticketCode());
         code.setFont(new Font(Font.COURIER, 14, Font.BOLD));
         code.setAlignment(Element.ALIGN_CENTER);
         document.add(new Paragraph("\n"));

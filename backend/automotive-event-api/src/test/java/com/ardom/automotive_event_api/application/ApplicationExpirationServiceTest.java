@@ -1,6 +1,7 @@
 package com.ardom.automotive_event_api.application;
 
-import com.ardom.automotive_event_api.common.email.EmailService;
+import com.ardom.automotive_event_api.event.Event;
+import com.ardom.automotive_event_api.user.User;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -10,6 +11,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.LocalDate;
@@ -19,9 +21,7 @@ import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("ApplicationExpirationService")
@@ -31,7 +31,7 @@ class ApplicationExpirationServiceTest {
     private ApplicationRepository applicationRepository;
 
     @Mock
-    private EmailService emailService;
+    private ApplicationEventPublisher eventPublisher;
 
     @InjectMocks
     private ApplicationExpirationService applicationExpirationService;
@@ -51,14 +51,36 @@ class ApplicationExpirationServiceTest {
         @DisplayName("Should mark all found applications as EXPIRED when applications match query")
         void expireUnpaidApplications_shouldMarkApplicationsAsExpired_whenApplicationsAreFound() {
             // given
-            Application firstApplication = new Application();
-            firstApplication.setStatus(ApplicationStatus.APPROVED_WAITING_PAYMENT);
+            Application firstApplication = Application.builder()
+                    .id(1L)
+                    .user(User.builder()
+                            .email("john_doe@gmail.com")
+                            .build())
+                    .event(Event.builder()
+                            .name("event")
+                            .dateStart(LocalDateTime.now().plusDays(3))
+                            .build())
+                    .rejectionReason("idk")
+                    .status(ApplicationStatus.APPROVED_WAITING_PAYMENT)
+                    .build();
 
-            Application secondApplication = new Application();
-            secondApplication.setStatus(ApplicationStatus.APPROVED_WAITING_PAYMENT);
+            Application secondApplication = Application.builder()
+                    .id(2L)
+                    .user(User.builder()
+                            .email("johnie_doe@gmail.com")
+                            .build())
+                    .event(Event.builder()
+                            .name("event")
+                            .dateStart(LocalDateTime.now().plusDays(3))
+                            .build())
+                    .rejectionReason("idk")
+                    .status(ApplicationStatus.APPROVED_WAITING_PAYMENT)
+                    .build();
 
             when(applicationRepository.findAllByStatusAndEvent_DateStartBefore(any(), any()))
                     .thenReturn(List.of(firstApplication, secondApplication));
+            when(applicationRepository.save(any(Application.class)))
+                    .thenAnswer(invocation -> invocation.getArgument(0));
 
             // when
             applicationExpirationService.expireUnpaidApplications();

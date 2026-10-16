@@ -3,9 +3,10 @@ package com.ardom.automotive_event_api.application.payment;
 import com.ardom.automotive_event_api.application.Application;
 import com.ardom.automotive_event_api.application.ApplicationRepository;
 import com.ardom.automotive_event_api.application.ApplicationStatus;
+import com.ardom.automotive_event_api.application.car.CarRepository;
 import com.ardom.automotive_event_api.application.exception.ApplicationNotFoundException;
 import com.ardom.automotive_event_api.application.exception.ApplicationPaymentNotFoundException;
-import com.ardom.automotive_event_api.common.email.EmailService;
+import com.ardom.automotive_event_api.common.notification.ApplicationPaymentNotification;
 import com.ardom.automotive_event_api.event.Event;
 import com.ardom.automotive_event_api.payment.PaymentStatus;
 import com.ardom.automotive_event_api.payment.dto.response.CheckoutResponse;
@@ -25,6 +26,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.core.Authentication;
 import org.springframework.test.util.ReflectionTestUtils;
 
@@ -46,9 +48,11 @@ class ApplicationPaymentServiceTest {
     @Mock
     private ApplicationRepository applicationRepository;
     @Mock
+    private CarRepository carRepository;
+    @Mock
     private Authentication authentication;
     @Mock
-    private EmailService emailService;
+    private ApplicationEventPublisher eventPublisher;
 
     @InjectMocks
     private ApplicationPaymentService applicationPaymentService;
@@ -64,6 +68,8 @@ class ApplicationPaymentServiceTest {
         user = User.builder()
                 .id(1L)
                 .email("john@example.com")
+                .name("john")
+                .surname("doe")
                 .role(Role.USER)
                 .build();
 
@@ -238,6 +244,7 @@ class ApplicationPaymentServiceTest {
             assertThat(application.getStatus()).isEqualTo(ApplicationStatus.COMPLETED);
         }
 
+        //TODO
         @Test
         @DisplayName("should send confirmation email on success")
         void handleSuccessfulCheckout_shouldSendConfirmationEmail_whenPaymentSucceeds() {
@@ -249,13 +256,22 @@ class ApplicationPaymentServiceTest {
                     .build();
 
             when(applicationPaymentRepository.findById(10L)).thenReturn(Optional.of(payment));
+            when(carRepository.findAllByApplicationId(application.getId())).thenReturn(List.of());
 
             // When
             applicationPaymentService.handleSuccessfulCheckout(10L);
 
             // Then
-            verify(emailService).sendPaymentConfirmed(
-                    eq(application), eq(user), eq("AutoShow 2026"));
+            verify(eventPublisher).publishEvent((Object) argThat(e -> {
+                if (!(e instanceof ApplicationPaymentNotification n)) return false;
+                return n.applicationId().equals(application.getId()) &&
+                        n.status() == ApplicationStatus.COMPLETED &&
+                        n.applicantEmail().equals(application.getUser().getEmail()) &&
+                        n.applicantName().equals(application.getUser().getName()) &&
+                        n.applicantSurname().equals(application.getUser().getSurname()) &&
+                        n.eventName().equals(application.getEvent().getName()) &&
+                        n.paymentData().amountPaid().compareTo(new BigDecimal("120.00")) == 0;
+            }));
         }
 
         @Test
@@ -276,7 +292,7 @@ class ApplicationPaymentServiceTest {
             // Then
             // Application status should not be touched again
             assertThat(application.getStatus()).isEqualTo(ApplicationStatus.APPROVED_WAITING_PAYMENT);
-            verify(emailService, never()).sendPaymentConfirmed(any(), any(), any());
+            verify(eventPublisher, never()).publishEvent(any());
         }
 
         @Test

@@ -7,7 +7,8 @@ import com.ardom.automotive_event_api.application.dto.request.RejectApplicationR
 import com.ardom.automotive_event_api.application.dto.request.UpdateApplicationRequest;
 import com.ardom.automotive_event_api.application.dto.response.*;
 import com.ardom.automotive_event_api.application.exception.*;
-import com.ardom.automotive_event_api.common.email.EmailService;
+import com.ardom.automotive_event_api.common.notification.ApplicationNotification;
+import com.ardom.automotive_event_api.common.notification.ApplicationEventType;
 import com.ardom.automotive_event_api.event.Event;
 import com.ardom.automotive_event_api.event.EventRepository;
 import com.ardom.automotive_event_api.event.EventStatus;
@@ -17,6 +18,7 @@ import com.ardom.automotive_event_api.user.exception.UserNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.Authentication;
@@ -41,7 +43,7 @@ public class ApplicationService {
     private final EventRepository eventRepository;
     private final ApplicationMapper applicationMapper;
     private final CarMapper carMapper;
-    private final EmailService emailService;
+    private final ApplicationEventPublisher eventPublisher;
 
     // -------------------------------------------------------------------------
     // Public
@@ -163,7 +165,16 @@ public class ApplicationService {
         application.setStatus(ApplicationStatus.PENDING);
         application.setRejectionReason(null);
 
-        emailService.sendApplicationReceived(applicationRepository.save(application));
+        application = applicationRepository.save(application);
+
+        eventPublisher.publishEvent(new ApplicationNotification(
+                application.getId(),
+                application.getUser().getEmail(),
+                application.getEvent().getName(),
+                application.getEvent().getPaymentDeadline(),
+                application.getRejectionReason(),
+                ApplicationEventType.APPLICATION_RECEIVED
+        ));
 
         return getApplication(authentication, id);
     }
@@ -267,7 +278,16 @@ public class ApplicationService {
 
         application.setStatus(ApplicationStatus.APPROVED_WAITING_PAYMENT);
 
-        emailService.sendApplicationApproved(applicationRepository.save(application));
+        application = applicationRepository.save(application);
+
+        eventPublisher.publishEvent(new ApplicationNotification(
+                application.getId(),
+                application.getUser().getEmail(),
+                application.getEvent().getName(),
+                application.getEvent().getPaymentDeadline(),
+                application.getRejectionReason(),
+                ApplicationEventType.APPLICATION_APPROVED
+        ));
 
         return getApplicationForAdmin(id);
     }
@@ -281,11 +301,20 @@ public class ApplicationService {
         }
 
         application.setStatus(ApplicationStatus.REJECTED);
-        if (!request.rejectionReason().isBlank()) {
+        if (request != null) {
             application.setRejectionReason(request.rejectionReason());
         }
 
-        emailService.sendApplicationRejected(applicationRepository.save(application));
+        application = applicationRepository.save(application);
+
+        eventPublisher.publishEvent(new ApplicationNotification(
+                application.getId(),
+                application.getUser().getEmail(),
+                application.getEvent().getName(),
+                application.getEvent().getPaymentDeadline(),
+                application.getRejectionReason(),
+                ApplicationEventType.APPLICATION_REJECTED
+        ));
 
         return getApplicationForAdmin(id);
     }

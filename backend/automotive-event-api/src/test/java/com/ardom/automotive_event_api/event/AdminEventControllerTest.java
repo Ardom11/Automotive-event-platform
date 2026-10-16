@@ -115,8 +115,8 @@ class AdminEventControllerTest {
                     "Festival1", "Very interesting automotive event",
                     "Circuit Park", "Main Street 1", "Amsterdam", "Netherlands",
                     new BigDecimal("52.365400"), new BigDecimal("4.904100"),
-                    LocalDateTime.of(2026, 8, 1, 10, 0),
-                    LocalDateTime.of(2026, 8, 3, 22, 0),
+                    LocalDateTime.now().plusMonths(1),
+                    LocalDateTime.now().plusMonths(1).plusDays(2).plusHours(10),
                     3000, new BigDecimal("60.00"), new BigDecimal("110.00")
             );
         }

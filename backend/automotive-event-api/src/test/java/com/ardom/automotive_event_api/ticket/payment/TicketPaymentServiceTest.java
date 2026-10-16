@@ -1,8 +1,9 @@
 package com.ardom.automotive_event_api.ticket.payment;
 
 import com.ardom.automotive_event_api.application.exception.TicketPaymentNotFoundException;
-import com.ardom.automotive_event_api.common.email.EmailService;
+import com.ardom.automotive_event_api.common.notification.TicketNotification;
 import com.ardom.automotive_event_api.event.Event;
+import com.ardom.automotive_event_api.event.EventLocation;
 import com.ardom.automotive_event_api.event.EventRepository;
 import com.ardom.automotive_event_api.event.EventStatus;
 import com.ardom.automotive_event_api.event.exception.EventNotFoundException;
@@ -11,8 +12,10 @@ import com.ardom.automotive_event_api.event.exception.NotEnoughEventTicketsExcep
 import com.ardom.automotive_event_api.payment.PaymentStatus;
 import com.ardom.automotive_event_api.payment.dto.response.CheckoutResponse;
 import com.ardom.automotive_event_api.ticket.Ticket;
+import com.ardom.automotive_event_api.ticket.TicketHolder;
 import com.ardom.automotive_event_api.ticket.TicketRepository;
 import com.ardom.automotive_event_api.ticket.TicketStatus;
+import com.ardom.automotive_event_api.ticket.dto.request.TicketHolderRequest;
 import com.ardom.automotive_event_api.ticket.dto.request.TicketPurchaseGuestRequest;
 import com.ardom.automotive_event_api.ticket.dto.request.TicketPurchaseRequest;
 import com.ardom.automotive_event_api.user.Role;
@@ -30,6 +33,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.core.Authentication;
 import org.springframework.test.util.ReflectionTestUtils;
 
@@ -37,10 +41,11 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.IntStream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -55,7 +60,7 @@ class TicketPaymentServiceTest {
     @Mock
     private Authentication authentication;
     @Mock
-    private EmailService emailService;
+    private ApplicationEventPublisher eventPublisher;
 
     @InjectMocks
     private TicketPaymentService ticketPaymentService;
@@ -71,6 +76,14 @@ class TicketPaymentServiceTest {
                 .name("AutoShow 2026")
                 .ticketPrice(new BigDecimal("55.00"))
                 .ticketsCapacity(100)
+                .location(new EventLocation(
+                        "place",
+                        "address",
+                        "city",
+                        "country",
+                        null,
+                        null
+                ))
                 .status(EventStatus.PUBLISHED)
                 .build();
 
@@ -79,6 +92,18 @@ class TicketPaymentServiceTest {
                 .email("john@example.com")
                 .role(Role.USER)
                 .build();
+    }
+
+    private static List<TicketHolderRequest> holderRequests(int count) {
+        return IntStream.rangeClosed(1, count)
+                .mapToObj(i -> new TicketHolderRequest("First" + i, "Last" + i))
+                .toList();
+    }
+
+    private static List<TicketHolder> holderEntities(int count) {
+        return IntStream.rangeClosed(1, count)
+                .mapToObj(i -> new TicketHolder("First" + i, "Last" + i))
+                .toList();
     }
 
     // -------------------------------------------------------------------------
@@ -94,7 +119,7 @@ class TicketPaymentServiceTest {
         void initiateCheckout_shouldReturnCheckoutUrl_whenEventIsValidAndUserAuthenticated()
                 throws StripeException {
             // Given
-            TicketPurchaseRequest request = new TicketPurchaseRequest(1L, 2);
+            TicketPurchaseRequest request = new TicketPurchaseRequest(1L, holderRequests(2));
 
             when(authentication.getPrincipal()).thenReturn(user);
             when(eventRepository.findByIdAndStatus(1L, EventStatus.PUBLISHED))
@@ -104,7 +129,7 @@ class TicketPaymentServiceTest {
             TicketPayment savedPayment = TicketPayment.builder()
                     .event(event)
                     .user(user)
-                    .quantity(2)
+                    .ticketHolders(holderEntities(2))
                     .amountPaid(new BigDecimal("110.00"))
                     .status(PaymentStatus.PENDING)
                     .build();
@@ -130,11 +155,11 @@ class TicketPaymentServiceTest {
         }
 
         @Test
-        @DisplayName("should set amountPaid as price times quantity")
+        @DisplayName("should set amountPaid as price times holder count")
         void initiateCheckout_shouldSetCorrectAmountPaid_whenQuantityIsMoreThanOne()
                 throws StripeException {
             // Given
-            TicketPurchaseRequest request = new TicketPurchaseRequest(1L, 3);
+            TicketPurchaseRequest request = new TicketPurchaseRequest(1L, holderRequests(3));
 
             when(authentication.getPrincipal()).thenReturn(user);
             when(eventRepository.findByIdAndStatus(1L, EventStatus.PUBLISHED))
@@ -171,7 +196,7 @@ class TicketPaymentServiceTest {
         @DisplayName("should throw EventNotFoundException when event does not exist or is not published")
         void initiateCheckout_shouldThrowEventNotFoundException_whenEventNotFound() {
             // Given
-            TicketPurchaseRequest request = new TicketPurchaseRequest(99L, 1);
+            TicketPurchaseRequest request = new TicketPurchaseRequest(99L, holderRequests(1));
 
             when(authentication.getPrincipal()).thenReturn(user);
             when(eventRepository.findByIdAndStatus(99L, EventStatus.PUBLISHED))
@@ -186,7 +211,7 @@ class TicketPaymentServiceTest {
         @DisplayName("should throw EventSoldOutException when event has no tickets left")
         void initiateCheckout_shouldThrowEventSoldOutException_whenEventIsSoldOut() {
             // Given
-            TicketPurchaseRequest request = new TicketPurchaseRequest(1L, 1);
+            TicketPurchaseRequest request = new TicketPurchaseRequest(1L, holderRequests(1));
 
             when(authentication.getPrincipal()).thenReturn(user);
             when(eventRepository.findByIdAndStatus(1L, EventStatus.PUBLISHED))
@@ -202,7 +227,7 @@ class TicketPaymentServiceTest {
         @DisplayName("should throw NotEnoughEventTicketsException when requested quantity exceeds remaining")
         void initiateCheckout_shouldThrowNotEnoughEventTicketsException_whenNotEnoughTicketsLeft() {
             // Given
-            TicketPurchaseRequest request = new TicketPurchaseRequest(1L, 10);
+            TicketPurchaseRequest request = new TicketPurchaseRequest(1L, holderRequests(10));
 
             when(authentication.getPrincipal()).thenReturn(user);
             when(eventRepository.findByIdAndStatus(1L, EventStatus.PUBLISHED))
@@ -229,7 +254,9 @@ class TicketPaymentServiceTest {
         void initiateCheckout_shouldReturnCheckoutUrl_whenGuestDataIsValid() throws StripeException {
             // Given
             TicketPurchaseGuestRequest request = new TicketPurchaseGuestRequest(
-                    1L, 1, "Jane", "Doe", "jane@example.com");
+                    1L,
+                    holderRequests(1),
+                    "jane@example.com");
 
             when(eventRepository.findByIdAndStatus(1L, EventStatus.PUBLISHED))
                     .thenReturn(Optional.of(event));
@@ -256,11 +283,13 @@ class TicketPaymentServiceTest {
         }
 
         @Test
-        @DisplayName("should persist guest fields on payment entity")
+        @DisplayName("should persist guest email and ticket holders on payment entity")
         void initiateCheckout_shouldPersistGuestFields_whenGuestCheckout() throws StripeException {
             // Given
             TicketPurchaseGuestRequest request = new TicketPurchaseGuestRequest(
-                    1L, 1, "Jane", "Doe", "jane@example.com");
+                    1L,
+                    holderRequests(1),
+                    "jane@example.com");
 
             when(eventRepository.findByIdAndStatus(1L, EventStatus.PUBLISHED))
                     .thenReturn(Optional.of(event));
@@ -286,8 +315,9 @@ class TicketPaymentServiceTest {
                 // Then
                 verify(ticketPaymentRepository, atLeastOnce()).save(paymentCaptor.capture());
                 TicketPayment captured = paymentCaptor.getAllValues().getFirst();
-                assertThat(captured.getGuestName()).isEqualTo("Jane");
-                assertThat(captured.getGuestSurname()).isEqualTo("Doe");
+                assertThat(captured.getTicketHolders()).hasSize(1);
+                assertThat(captured.getTicketHolders().getFirst().getName()).isEqualTo("First1");
+                assertThat(captured.getTicketHolders().getFirst().getSurname()).isEqualTo("Last1");
                 assertThat(captured.getGuestEmail()).isEqualTo("jane@example.com");
                 assertThat(captured.getUser()).isNull();
             }
@@ -298,7 +328,9 @@ class TicketPaymentServiceTest {
         void initiateCheckout_shouldThrowEventNotFoundException_whenEventNotFound() {
             // Given
             TicketPurchaseGuestRequest request = new TicketPurchaseGuestRequest(
-                    99L, 1, "Jane", "Doe", "jane@example.com");
+                    99L,
+                    holderRequests(1),
+                    "jane@example.com");
 
             when(eventRepository.findByIdAndStatus(99L, EventStatus.PUBLISHED))
                     .thenReturn(Optional.empty());
@@ -318,13 +350,15 @@ class TicketPaymentServiceTest {
     class HandleSuccessfulCheckout {
 
         @Test
-        @DisplayName("should create tickets and send email when payment is pending")
+        @DisplayName("should create tickets carrying each holder's own name, and send email")
         void handleSuccessfulCheckout_shouldCreateTicketsAndSendEmail_whenPaymentIsPending() {
             // Given
             TicketPayment payment = TicketPayment.builder()
                     .event(event)
                     .user(user)
-                    .quantity(2)
+                    .ticketHolders(List.of(
+                            new TicketHolder("Jane", "Doe"),
+                            new TicketHolder("John", "Smith")))
                     .amountPaid(new BigDecimal("110.00"))
                     .status(PaymentStatus.PENDING)
                     .build();
@@ -343,6 +377,12 @@ class TicketPaymentServiceTest {
 
             List<Ticket> savedTickets = ticketCaptor.getValue();
             assertThat(savedTickets).hasSize(2);
+
+            assertThat(savedTickets.get(0).getName()).isEqualTo("Jane");
+            assertThat(savedTickets.get(0).getSurname()).isEqualTo("Doe");
+            assertThat(savedTickets.get(1).getName()).isEqualTo("John");
+            assertThat(savedTickets.get(1).getSurname()).isEqualTo("Smith");
+
             savedTickets.forEach(ticket -> {
                 assertThat(ticket.getStatus()).isEqualTo(TicketStatus.ACTIVE);
                 assertThat(ticket.getCode()).isNotBlank();
@@ -351,7 +391,12 @@ class TicketPaymentServiceTest {
                 assertThat(ticket.getEvent()).isEqualTo(event);
             });
 
-            verify(emailService).sendTicket(anyList(), eq("john@example.com"), eq("AutoShow 2026"));
+            ArgumentCaptor<TicketNotification> notificationCaptor = ArgumentCaptor.forClass(TicketNotification.class);
+            verify(eventPublisher).publishEvent(notificationCaptor.capture());
+
+            TicketNotification notification = notificationCaptor.getValue();
+            assertThat(notification.recipientEmail()).isEqualTo(user.getEmail());
+            assertThat(notification.tickets()).hasSize(2);
         }
 
         @Test
@@ -361,7 +406,7 @@ class TicketPaymentServiceTest {
             TicketPayment payment = TicketPayment.builder()
                     .event(event)
                     .guestEmail("jane@example.com")
-                    .quantity(1)
+                    .ticketHolders(holderEntities(1))
                     .amountPaid(new BigDecimal("55.00"))
                     .status(PaymentStatus.PENDING)
                     .build();
@@ -372,7 +417,9 @@ class TicketPaymentServiceTest {
             ticketPaymentService.handleSuccessfulCheckout(20L);
 
             // Then
-            verify(emailService).sendTicket(anyList(), eq("jane@example.com"), eq("AutoShow 2026"));
+            ArgumentCaptor<TicketNotification> notificationCaptor = ArgumentCaptor.forClass(TicketNotification.class);
+            verify(eventPublisher).publishEvent(notificationCaptor.capture());
+            assertThat(notificationCaptor.getValue().recipientEmail()).isEqualTo("jane@example.com");
         }
 
         @Test
@@ -382,7 +429,7 @@ class TicketPaymentServiceTest {
             TicketPayment payment = TicketPayment.builder()
                     .event(event)
                     .user(user)
-                    .quantity(1)
+                    .ticketHolders(holderEntities(1))
                     .status(PaymentStatus.SUCCEEDED)
                     .build();
             payment.setPaidAt(LocalDateTime.now().minusMinutes(5));
@@ -394,7 +441,7 @@ class TicketPaymentServiceTest {
 
             // Then
             verify(ticketRepository, never()).saveAll(any());
-            verify(emailService, never()).sendTicket(any(), any(), any());
+            verify(eventPublisher, never()).publishEvent(any());
         }
 
         @Test
@@ -404,7 +451,7 @@ class TicketPaymentServiceTest {
             TicketPayment payment = TicketPayment.builder()
                     .event(event)
                     .user(user)
-                    .quantity(3)
+                    .ticketHolders(holderEntities(3))
                     .amountPaid(new BigDecimal("165.00"))
                     .status(PaymentStatus.PENDING)
                     .build();

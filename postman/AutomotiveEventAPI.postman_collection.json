@@ -402,7 +402,7 @@
             "header": [],
             "body": {
               "mode": "raw",
-              "raw": "{\r\n    \"eventId\": ,\r\n    \"quantity\":\r\n}",
+              "raw": "{\r\n    \"eventId\": ,\r\n    \"ticketHolders\":[\r\n        {\r\n            \"name\": \"\",\r\n            \"surname\": \"\"\r\n        }\r\n    ]\r\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -431,7 +431,7 @@
             "header": [],
             "body": {
               "mode": "raw",
-              "raw": "{\r\n    \"eventId\": ,\r\n    \"quantity\": ,\r\n    \"guestName\": ,\r\n    \"guestSurname\": ,\r\n    \"guestEmail\": \r\n}",
+              "raw": "{\r\n    \"eventId\": ,\r\n    \"ticketHolders\":\r\n    [\r\n        {\r\n            \"name\": \"\",\r\n            \"surname\": \"\"\r\n        }\r\n    ],\r\n    \"guestEmail\": \"\"\r\n}",
               "options": {
                 "raw": {
                   "language": "json"

@@ -133,7 +133,7 @@ public class AdminApplicationController {
     public ResponseEntity<AdminApplicationResponse> rejectApplication(
             @Parameter(description = "ID of the application to reject", example = "42")
             @PathVariable Long id,
-            @Valid @RequestBody RejectApplicationRequest request
+            @Valid @RequestBody(required = false) RejectApplicationRequest request
     ) {
         return ResponseEntity.ok(applicationService.rejectApplication(id, request));
     }

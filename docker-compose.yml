@@ -1,8 +1,10 @@
+name: automotive-event-platform
+
 services:
   api:
     build:
-      context: ./backend/automotive-event-api
-      dockerfile: Dockerfile
+      context: ./backend
+      dockerfile: automotive-event-api/Dockerfile
     container_name: api
     ports:
       - "8080:8080"
@@ -11,7 +13,23 @@ services:
     depends_on:
       db:
         condition: service_healthy
-    restart: on-failure
+      kafka:
+        condition: service_healthy
+    restart: unless-stopped
+
+  notification-service:
+    build:
+      context: ./backend
+      dockerfile: notification-service/Dockerfile
+    container_name: notification-service
+    ports:
+      - "8081:8081"
+    env_file:
+      - .env
+    depends_on:
+      kafka:
+        condition: service_healthy
+    restart: unless-stopped
 
   db:
     image: postgres:18-alpine
@@ -28,6 +46,22 @@ services:
       timeout: 5s
       retries: 5
       start_period: 10s
+    restart: unless-stopped
+
+  kafka:
+    image: apache/kafka:4.3.0
+    container_name: kafka
+    ports:
+      - "9092:9092"
+    env_file:
+      - .env
+    healthcheck:
+      test: [ "CMD", "/opt/kafka/bin/kafka-topics.sh", "--bootstrap-server", "localhost:9092", "--list" ]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 20s
+    restart: unless-stopped
 
 volumes:
   postgres_data:

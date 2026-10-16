@@ -12,6 +12,8 @@ public class TicketMapper {
     public TicketSummaryResponse toResponse(Ticket ticket) {
         return new TicketSummaryResponse(
                 ticket.getEvent().getName(),
+                ticket.getName(),
+                ticket.getSurname(),
                 String.format("%s - %s",
                         ticket.getEvent().getDateStart().format(DateTimeFormatter.ofPattern("dd MMM yyyy HH:mm")),
                         ticket.getEvent().getDateEnd().format(DateTimeFormatter.ofPattern("dd MMM yyyy HH:mm"))),
